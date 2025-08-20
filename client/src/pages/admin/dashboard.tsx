@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import QuestionFormModal from "@/components/question-form-modal";
+import SubmissionDetailsModal from "@/components/submission-details-modal";
 import { 
   Settings, 
   LogOut, 
@@ -29,7 +30,8 @@ import {
   Trash2,
   Plus,
   Edit,
-  Eye
+  Eye,
+  Trophy
 } from "lucide-react";
 import type { Participant, Question, SystemSettings } from "@shared/schema";
 
@@ -58,11 +60,27 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Check admin authentication on mount
   useEffect(() => {
-    // In a real app, you'd verify the session here
+    // Verify admin session
+    fetch('/api/admin/verify', { credentials: 'include' })
+      .then(response => {
+        if (!response.ok) {
+          toast({
+            title: "Access Denied",
+            description: "Please log in as an administrator",
+            variant: "destructive",
+          });
+          setLocation('/admin/x9k2p8m7q1');
+        }
+      })
+      .catch(() => {
+        setLocation('/admin/x9k2p8m7q1');
+      });
     // For now, we'll assume the user is authenticated if they reached this page
   }, []);
 
@@ -209,6 +227,77 @@ export default function AdminDashboard() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const exportParticipants = () => {
+    const csvData = participants.map(p => ({
+      Name: p.name,
+      Email: p.email,
+      Phone: p.phone,
+      Institution: p.institution,
+      Passcode: p.passcode,
+      Status: p.hasCompletedQuiz ? 'Completed' : 'Pending',
+      'Registered At': new Date(p.registeredAt!).toLocaleDateString()
+    }));
+    downloadCSV(csvData, 'participants.csv');
+  };
+
+  const exportSubmissions = () => {
+    const csvData = submissions.map(submission => {
+      const participant = participants.find(p => p.id === submission.participantId);
+      return {
+        Name: participant?.name || 'Unknown',
+        Email: participant?.email || 'Unknown',
+        Institution: participant?.institution || 'Unknown',
+        Score: submission.score,
+        'Total Marks': submission.totalMarks,
+        'Percentage': Math.round((submission.score / submission.totalMarks) * 100),
+        'Time Taken': formatTime(submission.timeTaken),
+        'Questions Answered': Object.keys(submission.answers).length,
+        'Total Questions': questions.length,
+        'Completed At': new Date(submission.completedAt).toLocaleDateString()
+      };
+    });
+    downloadCSV(csvData, 'quiz-submissions.csv');
+  };
+
+  const downloadCSV = (data: any[], filename: string) => {
+    if (data.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Export Successful",
+      description: `Data exported to ${filename}`,
+    });
+  };
+
   const filteredParticipants = participants.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -301,6 +390,46 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Live Leaderboard */}
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <Trophy className="mr-2 text-yellow-600" />
+                      Live Leaderboard
+                    </h3>
+                    <div className="space-y-3">
+                      {submissions.slice(0, 10).map((submission, index) => {
+                        const participant = participants.find(p => p.id === submission.participantId);
+                        return (
+                          <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                                index === 1 ? 'bg-gray-100 text-gray-800' :
+                                index === 2 ? 'bg-orange-100 text-orange-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {index + 1}
+                              </div>
+                              <div className="ml-3">
+                                <p className="font-medium text-gray-800">{participant?.name || 'Unknown'}</p>
+                                <p className="text-sm text-gray-600">{participant?.institution || 'No school'}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-gray-800">{submission.score}/{submission.totalMarks}</p>
+                              <p className="text-xs text-gray-600">{formatTime(submission.timeTaken)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {submissions.length === 0 && (
+                        <p className="text-gray-500 text-center py-8">No submissions yet</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Controls Panel */}
@@ -352,7 +481,10 @@ export default function AdminDashboard() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-64"
                     />
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => exportParticipants()}
+                    >
                       <Download className="mr-2" size={16} />
                       Export
                     </Button>
@@ -424,7 +556,10 @@ export default function AdminDashboard() {
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-800">Quiz Submissions</h2>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => exportSubmissions()}
+                  >
                     <Download className="mr-2" size={16} />
                     Export
                   </Button>
@@ -473,7 +608,15 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell>
                             <div className="flex space-x-2">
-                              <Button variant="ghost" size="sm" className="text-primary hover:text-indigo-700">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-primary hover:text-indigo-700"
+                                onClick={() => {
+                                  setSelectedSubmission(submission);
+                                  setIsSubmissionModalOpen(true);
+                                }}
+                              >
                                 <Eye size={16} className="mr-1" />
                                 View
                               </Button>
@@ -585,6 +728,19 @@ export default function AdminDashboard() {
         }}
         question={editingQuestion}
       />
+
+      {/* Submission Details Modal */}
+      {selectedSubmission && (
+        <SubmissionDetailsModal
+          isOpen={isSubmissionModalOpen}
+          onClose={() => {
+            setIsSubmissionModalOpen(false);
+            setSelectedSubmission(null);
+          }}
+          submission={selectedSubmission}
+          participantName={selectedSubmission.participantName}
+        />
+      )}
     </div>
   );
 }

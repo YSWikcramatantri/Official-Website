@@ -53,14 +53,14 @@ export default function Quiz() {
       setIsQuizCompleted(true);
       toast({
         title: "Quiz Completed!",
-        description: `Your score: ${data.score}/${data.totalMarks}`,
+        description: "Thank you for participating! Your submission has been recorded.",
       });
       
       // Clear participant data and redirect after a delay
       setTimeout(() => {
         sessionStorage.removeItem('participant');
         setLocation('/');
-      }, 5000);
+      }, 3000);
     },
     onError: (error) => {
       submissionInProgress.current = false;

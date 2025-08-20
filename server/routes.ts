@@ -168,6 +168,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Admin verification endpoint
+  app.get("/api/admin/verify", (req: any, res) => {
+    console.log('Admin verification check:', req.session); // Debug log
+    if (!req.session?.isAdmin) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+    res.json({ authenticated: true });
+  });
+
   // Middleware to check admin authentication
   const requireAdmin = (req: any, res: any, next: any) => {
     console.log('Session check:', req.session); // Debug log

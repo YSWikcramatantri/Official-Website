@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
@@ -23,6 +24,7 @@ import {
   Satellite,
   UserPlus,
   Key,
+  CircleOff,
   CheckCircle2,
   Clock,
   Target,
@@ -63,11 +65,12 @@ export default function Home() {
     },
     onSuccess: (data) => {
       setGeneratedPasscode(data.passcode);
+      registrationForm.reset();
       toast({
         title: "Registration Successful!",
-        description: `Your passcode is ${data.passcode}. Save it to access the quiz.`,
+        description:
+          "Your passcode has been generated. Save it to access the quiz.",
       });
-      registrationForm.reset();
     },
     onError: (error) => {
       toast({
@@ -80,17 +83,17 @@ export default function Home() {
 
   const verifyPasscodeMutation = useMutation({
     mutationFn: async (data: { passcode: string }) => {
-      const response = await apiRequest("POST", "/api/participants/verify", data);
+      const response = await apiRequest(
+        "POST",
+        "/api/participants/verify",
+        data,
+      );
       return response.json();
     },
     onSuccess: (data) => {
-      // Store participant data in session storage
+      // Store participant data in sessionStorage for quiz access
       sessionStorage.setItem("participant", JSON.stringify(data.participant));
-      toast({
-        title: "Passcode Verified!",
-        description: `Welcome ${data.participant.name}! Starting quiz...`,
-      });
-      setTimeout(() => setLocation("/quiz"), 1000);
+      setLocation("/quiz");
     },
     onError: (error) => {
       toast({
@@ -297,51 +300,5 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Form {...passcodeForm}>
-                    <form
-                      onSubmit={passcodeForm.handleSubmit(handleQuizAccess)}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={passcodeForm.control}
-                        name="passcode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Enter Your Passcode</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                className="text-center text-2xl font-mono tracking-widest"
-                                placeholder="XXXXXX"
-                                maxLength={6}
-                                style={{ textTransform: "uppercase" }}
-                                onChange={(e) =>
-                                  field.onChange(e.target.value.toUpperCase())
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
-                      <Button
-                        type="submit"
-                        className="w-full bg-secondary hover:bg-purple-800"
-                        disabled={verifyPasscodeMutation.isPending}
-                      >
-                        {verifyPasscodeMutation.isPending
-                          ? "Verifying..."
-                          : "Start Quiz"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    </div>
-  );
-}
+
