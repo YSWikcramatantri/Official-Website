@@ -145,9 +145,22 @@ export default function AdminDashboard() {
     }
   });
 
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/logout");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logged Out",
+        description: "You have been logged out successfully",
+      });
+      setLocation('/');
+    }
+  });
+
   const handleLogout = () => {
-    // Clear session and redirect
-    setLocation('/');
+    logoutMutation.mutate();
   };
 
   const toggleRegistrations = () => {

@@ -134,18 +134,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid password" });
       }
 
-      // Set session or return token (simplified for demo)
-      req.session = req.session || {};
+      // Set session
       req.session.isAdmin = true;
+      console.log('Admin logged in, session:', req.session); // Debug log
       
       res.json({ message: "Login successful" });
     } catch (error) {
+      console.error('Login error:', error);
       res.status(400).json({ message: "Invalid request" });
     }
   });
 
+  // Admin Logout
+  app.post("/api/admin/logout", (req: any, res) => {
+    req.session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ message: "Could not log out" });
+      }
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
   // Middleware to check admin authentication
   const requireAdmin = (req: any, res: any, next: any) => {
+    console.log('Session check:', req.session); // Debug log
     if (!req.session?.isAdmin) {
       return res.status(401).json({ message: "Admin access required" });
     }

@@ -43,6 +43,7 @@ export class MemStorage implements IStorage {
   private questions: Map<string, Question>;
   private quizSubmissions: Map<string, QuizSubmission>;
   private systemSettings: SystemSettings;
+  private initialized: boolean = false;
 
   constructor() {
     this.participants = new Map();
@@ -55,8 +56,23 @@ export class MemStorage implements IStorage {
       adminPassword: "admin123"
     };
 
-    // Initialize with some sample questions
+    console.log('🚀 Memory Database initialized');
+    this.initializeDatabase();
+  }
+
+  private initializeDatabase() {
+    if (this.initialized) return;
+
+    console.log('📚 Setting up sample astronomy quiz data...');
+    
+    // Initialize with comprehensive astronomy questions
     this.initializeSampleQuestions();
+    
+    // Log database stats
+    console.log(`✅ Database ready with ${this.questions.size} questions`);
+    console.log(`📊 Settings: Registration ${this.systemSettings.registrationOpen ? 'Open' : 'Closed'}, Quiz ${this.systemSettings.quizActive ? 'Active' : 'Inactive'}`);
+    
+    this.initialized = true;
   }
 
   private initializeSampleQuestions() {
@@ -88,12 +104,74 @@ export class MemStorage implements IStorage {
         timeLimit: 45,
         marks: 3,
         orderIndex: 2
+      },
+      {
+        id: randomUUID(),
+        text: "What type of galaxy is the Milky Way?",
+        options: {
+          A: "Elliptical",
+          B: "Spiral",
+          C: "Irregular",
+          D: "Lenticular"
+        },
+        correctAnswer: "B",
+        timeLimit: 40,
+        marks: 4,
+        orderIndex: 3
+      },
+      {
+        id: randomUUID(),
+        text: "Which moon of Jupiter is known for its volcanic activity?",
+        options: {
+          A: "Europa",
+          B: "Ganymede",
+          C: "Io",
+          D: "Callisto"
+        },
+        correctAnswer: "C",
+        timeLimit: 50,
+        marks: 4,
+        orderIndex: 4
+      },
+      {
+        id: randomUUID(),
+        text: "What is the main component of the Sun?",
+        options: {
+          A: "Helium",
+          B: "Hydrogen",
+          C: "Carbon",
+          D: "Oxygen"
+        },
+        correctAnswer: "B",
+        timeLimit: 35,
+        marks: 3,
+        orderIndex: 5
       }
     ];
 
     sampleQuestions.forEach(question => {
       this.questions.set(question.id, question);
     });
+  }
+
+  // Enhanced memory database methods with logging
+  async createParticipant(insertParticipant: InsertParticipant): Promise<Participant> {
+    let passcode: string;
+    do {
+      passcode = this.generatePasscode();
+    } while (await this.getParticipantByPasscode(passcode));
+
+    const participant: Participant = {
+      ...insertParticipant,
+      id: randomUUID(),
+      passcode,
+      hasCompletedQuiz: false,
+      registeredAt: new Date()
+    };
+    
+    this.participants.set(participant.id, participant);
+    console.log(`👤 New participant registered: ${participant.name} (${participant.passcode})`);
+    return participant;
   }
 
   private generatePasscode(): string {
@@ -114,23 +192,7 @@ export class MemStorage implements IStorage {
     return Array.from(this.participants.values()).find(p => p.passcode === passcode);
   }
 
-  async createParticipant(insertParticipant: InsertParticipant): Promise<Participant> {
-    let passcode: string;
-    do {
-      passcode = this.generatePasscode();
-    } while (await this.getParticipantByPasscode(passcode));
 
-    const participant: Participant = {
-      ...insertParticipant,
-      id: randomUUID(),
-      passcode,
-      hasCompletedQuiz: false,
-      registeredAt: new Date()
-    };
-    
-    this.participants.set(participant.id, participant);
-    return participant;
-  }
 
   async updateParticipant(id: string, updates: Partial<Participant>): Promise<Participant | undefined> {
     const participant = this.participants.get(id);
