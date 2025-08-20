@@ -125,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin Authentication
-  app.post("/api/admin/login", async (req, res) => {
+  app.post("/api/admin/login", async (req: any, res) => {
     try {
       const { password } = z.object({ password: z.string() }).parse(req.body);
       const settings = await storage.getSystemSettings();
@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Set session or return token (simplified for demo)
       req.session = req.session || {};
-      (req.session as any).isAdmin = true;
+      req.session.isAdmin = true;
       
       res.json({ message: "Login successful" });
     } catch (error) {
