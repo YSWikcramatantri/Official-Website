@@ -258,14 +258,19 @@ export class MemStorage implements IStorage {
       .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime());
   }
 
-  async createQuizSubmission(insertSubmission: InsertQuizSubmission): Promise<QuizSubmission> {
+  async createQuizSubmission(submissionData: any): Promise<QuizSubmission> {
     const submission: QuizSubmission = {
-      ...insertSubmission,
       id: randomUUID(),
+      participantId: submissionData.participantId,
+      answers: submissionData.answers,
+      score: submissionData.score,
+      totalMarks: submissionData.totalMarks,
+      timeTaken: submissionData.timeTaken,
       completedAt: new Date()
     };
     
     this.quizSubmissions.set(submission.id, submission);
+    console.log(`💾 Quiz submission stored: ID ${submission.id}, Score: ${submission.score}/${submission.totalMarks}`);
     return submission;
   }
 

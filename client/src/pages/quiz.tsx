@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Participant, Question } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 interface QuizQuestion extends Omit<Question, 'correctAnswer'> {
   // Remove correctAnswer from client-side question type
@@ -20,6 +21,7 @@ export default function Quiz() {
   const [selectedAnswer, setSelectedAnswer] = useState("");
   const [startTime] = useState(Date.now());
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const submissionInProgress = useRef(false);
 
   // Get participant from session storage
   const participant = JSON.parse(sessionStorage.getItem('participant') || '{}') as Participant;
@@ -43,21 +45,11 @@ export default function Quiz() {
       answers: Record<string, string>;
       timeTaken: number;
     }) => {
-      const response = await fetch('/api/quiz-submissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
-      }
-      
+      const response = await apiRequest("POST", "/api/quiz-submissions", submissionData);
       return response.json();
     },
     onSuccess: (data) => {
+      submissionInProgress.current = false;
       setIsQuizCompleted(true);
       toast({
         title: "Quiz Completed!",
@@ -71,6 +63,8 @@ export default function Quiz() {
       }, 5000);
     },
     onError: (error) => {
+      submissionInProgress.current = false;
+      console.error('Submission error:', error);
       toast({
         title: "Submission Failed",
         description: error.message,
@@ -86,7 +80,9 @@ export default function Quiz() {
     setSelectedAnswer(answer);
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = useCallback(() => {
+    if (submissionInProgress.current) return;
+
     // Save current answer
     if (currentQuestion && selectedAnswer) {
       setAnswers(prev => ({
@@ -102,26 +98,45 @@ export default function Quiz() {
     } else {
       completeQuiz();
     }
-  };
+  }, [currentQuestion, selectedAnswer, currentQuestionIndex, questions.length]);
 
-  const handleTimeUp = () => {
-    // Auto-advance when time is up
+  const handleTimeUp = useCallback(() => {
+    if (submissionInProgress.current || isQuizCompleted) return;
     handleNextQuestion();
-  };
+  }, [handleNextQuestion, isQuizCompleted]);
 
-  const completeQuiz = () => {
+  const completeQuiz = useCallback(() => {
+    if (submissionInProgress.current || isQuizCompleted) return;
+    
+    submissionInProgress.current = true;
+    
     const finalAnswers = selectedAnswer && currentQuestion 
       ? { ...answers, [currentQuestion.id]: selectedAnswer }
       : answers;
     
     const timeTaken = Math.floor((Date.now() - startTime) / 1000);
     
+    console.log('Submitting quiz:', {
+      participantId: participant.id,
+      answers: finalAnswers,
+      timeTaken,
+      questionsAnswered: Object.keys(finalAnswers).length,
+      totalQuestions: questions.length
+    });
+    
     submitQuizMutation.mutate({
       participantId: participant.id,
       answers: finalAnswers,
       timeTaken
     });
-  };
+  }, [selectedAnswer, currentQuestion, answers, startTime, participant.id, isQuizCompleted, questions.length, submitQuizMutation]);
+
+  // Auto-submit when all questions are completed or quiz should end
+  useEffect(() => {
+    if (questions.length > 0 && currentQuestionIndex >= questions.length && !isQuizCompleted && !submissionInProgress.current) {
+      completeQuiz();
+    }
+  }, [currentQuestionIndex, questions.length, isQuizCompleted, completeQuiz]);
 
   const handleSkipQuestion = () => {
     handleNextQuestion();

@@ -80,10 +80,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
     try {
-      const submissionData = insertQuizSubmissionSchema.parse(req.body);
+      console.log('Received submission data:', req.body);
+      
+      // Validate the submission data
+      const { participantId, answers, timeTaken } = req.body;
+      
+      if (!participantId || !answers || typeof timeTaken !== 'number') {
+        console.error('Invalid submission structure:', { participantId, answers, timeTaken });
+        return res.status(400).json({ message: "Missing required fields: participantId, answers, timeTaken" });
+      }
       
       // Check if participant exists and hasn't completed quiz
-      const participant = await storage.getParticipant(submissionData.participantId);
+      const participant = await storage.getParticipant(participantId);
       if (!participant) {
         return res.status(404).json({ message: "Participant not found" });
       }
@@ -99,19 +107,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       questions.forEach(question => {
         totalMarks += question.marks;
-        if (submissionData.answers[question.id] === question.correctAnswer) {
+        if (answers[question.id] === question.correctAnswer) {
           score += question.marks;
         }
       });
 
       const submission = await storage.createQuizSubmission({
-        ...submissionData,
+        participantId,
+        answers,
+        timeTaken,
         score,
         totalMarks
       });
 
       // Mark participant as completed
       await storage.updateParticipant(participant.id, { hasCompletedQuiz: true });
+
+      console.log(`📝 Quiz submitted by ${participant.name}: ${score}/${totalMarks} points`);
 
       res.json({ 
         submissionId: submission.id, 
@@ -120,7 +132,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Quiz submitted successfully" 
       });
     } catch (error) {
-      res.status(400).json({ message: "Invalid submission data" });
+      console.error('Quiz submission error:', error);
+      res.status(400).json({ message: "Invalid submission data: " + (error instanceof Error ? error.message : 'Unknown error') });
     }
   });
 
