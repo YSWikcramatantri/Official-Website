@@ -304,19 +304,19 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Admin Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <Settings className="text-2xl text-primary mr-3" />
-              <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Admin Dashboard</h1>
             </div>
             <Button 
               onClick={handleLogout}
               variant="ghost"
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
             >
               <LogOut className="mr-2" size={16} />
               Logout
@@ -342,15 +342,15 @@ export default function AdminDashboard() {
               {/* Stats Cards */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="grid md:grid-cols-3 gap-6">
-                  <Card>
+                  <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-200 dark:border-blue-700">
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <div className="bg-blue-100 p-3 rounded-full">
-                          <Users className="text-blue-600" />
+                        <div className="bg-blue-100 dark:bg-blue-800/50 p-3 rounded-full">
+                          <Users className="text-blue-600 dark:text-blue-300" />
                         </div>
                         <div className="ml-4">
-                          <p className="text-sm text-gray-600">Total Registrations</p>
-                          <p className="text-2xl font-bold text-gray-800">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Total Registrations</p>
+                          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                             {stats?.totalRegistrations || 0}
                           </p>
                         </div>
@@ -358,15 +358,15 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 border-green-200 dark:border-green-700">
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <div className="bg-green-100 p-3 rounded-full">
-                          <ClipboardCheck className="text-green-600" />
+                        <div className="bg-green-100 dark:bg-green-800/50 p-3 rounded-full">
+                          <ClipboardCheck className="text-green-600 dark:text-green-300" />
                         </div>
                         <div className="ml-4">
-                          <p className="text-sm text-gray-600">Quiz Submissions</p>
-                          <p className="text-2xl font-bold text-gray-800">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Quiz Submissions</p>
+                          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                             {stats?.totalSubmissions || 0}
                           </p>
                         </div>
@@ -374,15 +374,15 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 border-purple-200 dark:border-purple-700">
                     <CardContent className="p-6">
                       <div className="flex items-center">
-                        <div className="bg-purple-100 p-3 rounded-full">
-                          <HelpCircle className="text-purple-600" />
+                        <div className="bg-purple-100 dark:bg-purple-800/50 p-3 rounded-full">
+                          <HelpCircle className="text-purple-600 dark:text-purple-300" />
                         </div>
                         <div className="ml-4">
-                          <p className="text-sm text-gray-600">Total Questions</p>
-                          <p className="text-2xl font-bold text-gray-800">
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Total Questions</p>
+                          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                             {stats?.totalQuestions || 0}
                           </p>
                         </div>
@@ -392,17 +392,23 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Live Leaderboard */}
-                <Card>
+                <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-700">
                   <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                      <Trophy className="mr-2 text-yellow-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                      <Trophy className="mr-2 text-yellow-600 dark:text-yellow-400" />
                       Live Leaderboard
                     </h3>
                     <div className="space-y-3">
-                      {submissions.slice(0, 10).map((submission, index) => {
+                      {submissions
+                  .sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return a.timeTaken - b.timeTaken;
+                  })
+                  .slice(0, 10)
+                  .map((submission, index) => {
                         const participant = participants.find(p => p.id === submission.participantId);
                         return (
-                          <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div key={submission.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
                             <div className="flex items-center">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                                 index === 0 ? 'bg-yellow-100 text-yellow-800' :
@@ -413,19 +419,19 @@ export default function AdminDashboard() {
                                 {index + 1}
                               </div>
                               <div className="ml-3">
-                                <p className="font-medium text-gray-800">{participant?.name || 'Unknown'}</p>
-                                <p className="text-sm text-gray-600">{participant?.institution || 'No school'}</p>
+                                <p className="font-medium text-gray-800 dark:text-gray-100">{participant?.name || 'Unknown'}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{participant?.institution || 'No school'}</p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-gray-800">{submission.score}/{submission.totalMarks}</p>
-                              <p className="text-xs text-gray-600">{formatTime(submission.timeTaken)}</p>
+                              <p className="font-bold text-gray-800 dark:text-gray-100">{submission.score}/{submission.totalMarks}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{formatTime(submission.timeTaken)}</p>
                             </div>
                           </div>
                         );
                       })}
                       {submissions.length === 0 && (
-                        <p className="text-gray-500 text-center py-8">No submissions yet</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-center py-8">No submissions yet</p>
                       )}
                     </div>
                   </CardContent>
@@ -434,12 +440,12 @@ export default function AdminDashboard() {
 
               {/* Controls Panel */}
               <div className="space-y-6">
-                <Card>
+                <Card className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border-gray-200 dark:border-gray-700">
                   <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Quiz Controls</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Quiz Controls</h3>
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Registrations</span>
+                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Registrations</span>
                         <Button
                           onClick={toggleRegistrations}
                           size="sm"
@@ -450,8 +456,8 @@ export default function AdminDashboard() {
                         </Button>
                       </div>
                       
-                      <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <span className="text-sm font-medium text-gray-700">Quiz Submissions</span>
+                      <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Quiz Submissions</span>
                         <Button
                           onClick={toggleQuizSubmissions}
                           size="sm"
@@ -470,10 +476,10 @@ export default function AdminDashboard() {
 
           {/* Registrations Tab */}
           <TabsContent value="registrations">
-            <Card>
+            <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-800">Participant Registrations</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Participant Registrations</h2>
                   <div className="flex space-x-3">
                     <Input
                       placeholder="Search registrations..."
@@ -552,10 +558,10 @@ export default function AdminDashboard() {
 
           {/* Submissions Tab */}
           <TabsContent value="submissions">
-            <Card>
+            <Card className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <CardContent className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-800">Quiz Submissions</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Quiz Submissions</h2>
                   <Button 
                     variant="outline"
                     onClick={() => exportSubmissions()}

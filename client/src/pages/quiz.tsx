@@ -67,7 +67,7 @@ export default function Quiz() {
       console.error('Submission error:', error);
       toast({
         title: "Submission Failed",
-        description: error.message,
+        description: "Unable to submit your quiz. Please try again.",
         variant: "destructive",
       });
     }

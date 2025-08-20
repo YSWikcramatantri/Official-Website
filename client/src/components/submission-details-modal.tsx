@@ -116,21 +116,20 @@ export default function SubmissionDetailsModal({
                     <p className="text-sm mb-3">{question.text}</p>
                     
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      {question.options.map((option, optIndex) => {
-                        const optionLetter = String.fromCharCode(65 + optIndex); // A, B, C, D
-                        const isUserAnswer = userAnswer === optionLetter;
-                        const isCorrectAnswer = question.correctAnswer === optionLetter;
+                      {Object.entries(question.options).map(([optionKey, optionValue], optIndex) => {
+                        const isUserAnswer = userAnswer === optionKey;
+                        const isCorrectAnswer = question.correctAnswer === optionKey;
                         
                         return (
                           <div
-                            key={optIndex}
+                            key={optionKey}
                             className={`p-2 rounded border ${
                               isCorrectAnswer ? 'bg-green-50 border-green-200' :
                               isUserAnswer && !isCorrectAnswer ? 'bg-red-50 border-red-200' :
                               'bg-gray-50 border-gray-200'
                             }`}
                           >
-                            <span className="font-medium">{optionLetter}.</span> {option}
+                            <span className="font-medium">{optionKey}.</span> {optionValue}
                             {isUserAnswer && (
                               <span className="ml-2 text-xs">
                                 {isCorrectAnswer ? '(Your answer ✓)' : '(Your answer ✗)'}

@@ -72,7 +72,7 @@ export default function Home() {
     onError: (error) => {
       toast({
         title: "Registration Failed",
-        description: error.message,
+        description: "Unable to register. Please check your details and try again.",
         variant: "destructive",
       });
     },
@@ -95,7 +95,7 @@ export default function Home() {
     onError: (error) => {
       toast({
         title: "Invalid Passcode",
-        description: error.message,
+        description: "Please check your passcode and try again.",
         variant: "destructive",
       });
     },
