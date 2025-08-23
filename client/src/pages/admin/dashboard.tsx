@@ -608,28 +608,28 @@ export default function AdminDashboard() {
                         <TableRow key={submission.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium text-gray-900">{submission.participantName}</div>
-                              <div className="text-sm text-gray-500">{submission.participantEmail}</div>
+                              <div className="font-medium text-gray-900 dark:text-gray-100">{submission.participantName}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{submission.participantEmail}</div>
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center">
-                              <div className="text-2xl font-bold text-green-600">{submission.score}</div>
+                              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{submission.score}</div>
                               <div className="ml-2">
-                                <div className="text-sm text-gray-900">out of {submission.totalMarks}</div>
-                                <div className="text-xs text-gray-500">
+                                <div className="text-sm text-gray-900 dark:text-gray-100">out of {submission.totalMarks}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
                                   {Math.round((submission.score / submission.totalMarks) * 100)}%
                                 </div>
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="text-sm text-gray-900">
+                          <TableCell className="text-sm text-gray-900 dark:text-gray-100">
                             {Object.keys(submission.answers).length}/{questions.length} answered
                           </TableCell>
-                          <TableCell className="text-sm text-gray-900">
+                          <TableCell className="text-sm text-gray-900 dark:text-gray-100">
                             {formatTime(submission.timeTaken)}
                           </TableCell>
-                          <TableCell className="text-sm text-gray-500">
+                          <TableCell className="text-sm text-gray-500 dark:text-gray-400">
                             {new Date(submission.completedAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
@@ -637,7 +637,7 @@ export default function AdminDashboard() {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                className="text-primary hover:text-indigo-700"
+                                className="text-primary hover:text-indigo-700 dark:text-blue-400 dark:hover:text-blue-300"
                                 onClick={() => {
                                   setSelectedSubmission(submission);
                                   setIsSubmissionModalOpen(true);
@@ -650,7 +650,7 @@ export default function AdminDashboard() {
                                 onClick={() => handleDeleteSubmission(submission.id)}
                                 variant="ghost"
                                 size="sm"
-                                className="text-red-600 hover:text-red-900"
+                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                               >
                                 <Trash2 size={16} />
                               </Button>
@@ -669,7 +669,7 @@ export default function AdminDashboard() {
           <TabsContent value="questions">
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-800">Quiz Questions</h2>
+                <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Quiz Questions</h2>
                 <Button onClick={handleAddQuestion}>
                   <Plus className="mr-2" size={16} />
                   Add Question
@@ -678,20 +678,20 @@ export default function AdminDashboard() {
 
               <div className="space-y-4">
                 {questions.map((question, index) => (
-                  <Card key={question.id}>
+                  <Card key={question.id} className="border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
-                            <Badge className="mr-3">Q{index + 1}</Badge>
-                            <span className="text-sm text-gray-500">
+                            <Badge className="mr-3 bg-primary text-white dark:bg-primary dark:text-white">Q{index + 1}</Badge>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
                               Time: {question.timeLimit}s
                             </span>
-                            <span className="text-sm text-gray-500 ml-4">
+                            <span className="text-sm text-gray-500 dark:text-gray-400 ml-4">
                               Marks: {question.marks}
                             </span>
                           </div>
-                          <h3 className="text-lg font-medium text-gray-800 mb-3">
+                          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-100 mb-3">
                             {question.text}
                           </h3>
                           
@@ -701,16 +701,16 @@ export default function AdminDashboard() {
                                 key={key}
                                 className={`flex items-center p-2 rounded-lg ${
                                   question.correctAnswer === key 
-                                    ? 'bg-green-50' 
-                                    : 'bg-gray-50'
+                                    ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700' 
+                                    : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                                 }`}
                               >
-                                <span className="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3">
+                                <span className="w-6 h-6 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-500 rounded-full flex items-center justify-center text-xs font-medium mr-3 text-gray-900 dark:text-gray-100">
                                   {key}
                                 </span>
-                                <span className="text-sm">{value}</span>
+                                <span className="text-sm text-gray-900 dark:text-gray-100">{value}</span>
                                 {question.correctAnswer === key && (
-                                  <div className="ml-2 text-green-500">✓</div>
+                                  <div className="ml-2 text-green-500 dark:text-green-400">✓</div>
                                 )}
                               </div>
                             ))}
@@ -722,7 +722,7 @@ export default function AdminDashboard() {
                             onClick={() => handleEditQuestion(question)}
                             variant="ghost"
                             size="sm"
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           >
                             <Edit size={16} />
                           </Button>
@@ -730,7 +730,7 @@ export default function AdminDashboard() {
                             onClick={() => handleDeleteQuestion(question.id)}
                             variant="ghost"
                             size="sm"
-                            className="text-red-600 hover:text-red-800"
+                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                           >
                             <Trash2 size={16} />
                           </Button>

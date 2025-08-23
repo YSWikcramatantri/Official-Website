@@ -226,7 +226,7 @@ export default function Quiz() {
         /* Disable print */
         @media print {
           .quiz-protection {
-            display: none;
+            display: none !important;
           }
         }
         /* Hide content when dev tools are open */
@@ -237,6 +237,111 @@ export default function Quiz() {
         }
       `}</style>
       <div className="container mx-auto px-4 py-8">
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            // Comprehensive keyboard shortcut blocking
+            document.addEventListener('keydown', function(e) {
+              // Block F12, F11, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S, Ctrl+A, Ctrl+P, Ctrl+Shift+S, PrintScreen
+              if (e.keyCode === 123 || // F12
+                  e.keyCode === 122 || // F11 
+                  e.keyCode === 44 ||  // Print Screen
+                  (e.ctrlKey && e.keyCode === 83) ||  // Ctrl+S
+                  (e.ctrlKey && e.shiftKey && e.keyCode === 83) || // Ctrl+Shift+S
+                  (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+                  (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+                  (e.ctrlKey && e.keyCode === 85) ||  // Ctrl+U
+                  (e.ctrlKey && e.keyCode === 65) ||  // Ctrl+A
+                  (e.ctrlKey && e.keyCode === 80) ||  // Ctrl+P
+                  (e.ctrlKey && e.keyCode === 67) ||  // Ctrl+C
+                  (e.ctrlKey && e.keyCode === 86) ||  // Ctrl+V
+                  (e.ctrlKey && e.keyCode === 88) ||  // Ctrl+X
+                  (e.ctrlKey && e.keyCode === 82) ||  // Ctrl+R
+                  (e.ctrlKey && e.shiftKey && e.keyCode === 82)) { // Ctrl+Shift+R
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                return false;
+              }
+            }, true);
+            
+            // Block PrintScreen specifically
+            document.addEventListener('keyup', function(e) {
+              if (e.keyCode === 44) {
+                e.preventDefault();
+                return false;
+              }
+            }, true);
+            
+            // Disable right click completely
+            document.addEventListener('contextmenu', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }, true);
+            
+            // Disable text selection and copy
+            document.addEventListener('selectstart', function(e) {
+              e.preventDefault();
+              return false;
+            }, true);
+            
+            document.addEventListener('copy', function(e) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }, true);
+            
+            // Monitor for screenshot attempts
+            let screenshotAttempts = 0;
+            window.addEventListener('blur', function() {
+              screenshotAttempts++;
+              document.body.style.filter = 'blur(10px)';
+              if (screenshotAttempts > 3) {
+                alert('Multiple screenshot attempts detected. Quiz will be terminated.');
+                window.location.href = '/';
+              }
+            });
+            
+            window.addEventListener('focus', function() {
+              setTimeout(() => {
+                document.body.style.filter = 'none';
+              }, 100);
+            });
+            
+            // Advanced dev tools detection
+            let devtools = {open: false, orientation: null};
+            setInterval(function() {
+              if (window.outerHeight - window.innerHeight > 200 || 
+                  window.outerWidth - window.innerWidth > 200) {
+                if (!devtools.open) {
+                  devtools.open = true;
+                  document.body.style.display = 'none';
+                  alert('Developer tools detected. Please close them to continue the quiz.');
+                  window.location.href = '/';
+                }
+              } else {
+                devtools.open = false;
+              }
+            }, 500);
+            
+            // Disable drag and drop
+            document.addEventListener('dragstart', function(e) {
+              e.preventDefault();
+              return false;
+            }, true);
+            
+            // Monitor for tab switching
+            document.addEventListener('visibilitychange', function() {
+              if (document.hidden) {
+                document.body.style.filter = 'blur(10px)';
+              } else {
+                setTimeout(() => {
+                  document.body.style.filter = 'none';
+                }, 200);
+              }
+            });
+          `
+        }} />
         
         {/* Quiz Header */}
         <div className="bg-gray-800 rounded-xl p-6 mb-8">
