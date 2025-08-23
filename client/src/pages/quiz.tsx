@@ -195,7 +195,47 @@ export default function Quiz() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div 
+      className="min-h-screen bg-gray-900 text-white quiz-protection"
+      style={{
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        pointerEvents: 'auto',
+      }}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
+      <style>{`
+        .quiz-protection * {
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .quiz-protection {
+          -webkit-user-select: none;
+          -khtml-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+        /* Disable print */
+        @media print {
+          .quiz-protection {
+            display: none;
+          }
+        }
+        /* Hide content when dev tools are open */
+        @media (max-width: 1200px) and (max-height: 800px) {
+          .quiz-protection {
+            filter: blur(5px);
+          }
+        }
+      `}</style>
       <div className="container mx-auto px-4 py-8">
         
         {/* Quiz Header */}
@@ -236,6 +276,7 @@ export default function Quiz() {
                 <label 
                   key={key}
                   className={`quiz-option ${selectedAnswer === key ? 'selected' : ''}`}
+                  style={{ userSelect: 'none' }}
                 >
                   <input
                     type="radio"
@@ -244,6 +285,7 @@ export default function Quiz() {
                     checked={selectedAnswer === key}
                     onChange={(e) => handleAnswerSelect(e.target.value)}
                     className="mr-4 text-primary"
+                    data-testid={`input-option-${key}`}
                   />
                   <span className="font-medium text-gray-700">{key}.</span>
                   <span className="ml-2">{value}</span>

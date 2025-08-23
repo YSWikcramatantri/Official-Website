@@ -40,7 +40,12 @@ export default function Home() {
   const { toast } = useToast();
 
   const registrationForm = useForm<InsertParticipant>({
-    resolver: zodResolver(insertParticipantSchema),
+    resolver: zodResolver(insertParticipantSchema.extend({
+      name: insertParticipantSchema.shape.name.min(1, "Name is required"),
+      email: insertParticipantSchema.shape.email.min(1, "Email is required"),
+      phone: insertParticipantSchema.shape.phone.min(1, "Phone number is required"),
+      institution: insertParticipantSchema.shape.institution.min(1, "Institution is required"),
+    })),
     defaultValues: {
       name: "",
       email: "",
@@ -275,8 +280,23 @@ export default function Home() {
                         <p className="text-sm text-green-700 dark:text-green-400 mb-3">
                           Your unique passcode is:
                         </p>
-                        <div className="text-3xl font-bold font-mono text-green-800 dark:text-green-300 tracking-widest bg-white dark:bg-gray-800 p-3 rounded border">
-                          {generatedPasscode}
+                        <div className="text-3xl font-bold font-mono text-green-800 dark:text-green-300 tracking-widest bg-white dark:bg-gray-800 p-3 rounded border flex items-center justify-center gap-3">
+                          <span>{generatedPasscode}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              navigator.clipboard.writeText(generatedPasscode);
+                              toast({
+                                title: "Copied!",
+                                description: "Passcode copied to clipboard",
+                              });
+                            }}
+                            className="h-8 px-2 text-xs"
+                            data-testid="button-copy-passcode"
+                          >
+                            Copy
+                          </Button>
                         </div>
                         <p className="text-xs text-green-600 dark:text-green-400 mt-3">
                           Save this passcode! You'll need it to access the quiz.

@@ -328,11 +328,31 @@ export default function AdminDashboard() {
       {/* Tab Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="registrations">Registrations</TabsTrigger>
-            <TabsTrigger value="submissions">Quiz Submissions</TabsTrigger>
-            <TabsTrigger value="questions">Quiz Questions</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600">
+            <TabsTrigger 
+              value="summary" 
+              className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Summary
+            </TabsTrigger>
+            <TabsTrigger 
+              value="registrations"
+              className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Registrations
+            </TabsTrigger>
+            <TabsTrigger 
+              value="submissions"
+              className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Quiz Submissions
+            </TabsTrigger>
+            <TabsTrigger 
+              value="questions"
+              className="text-gray-700 dark:text-gray-300 data-[state=active]:bg-primary data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Quiz Questions
+            </TabsTrigger>
           </TabsList>
 
           {/* Summary Tab */}
@@ -514,21 +534,21 @@ export default function AdminDashboard() {
                         <TableRow key={participant.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium text-gray-900">{participant.name}</div>
-                              <div className="text-sm text-gray-500">
+                              <div className="font-medium text-gray-900 dark:text-gray-100">{participant.name}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(participant.registeredAt!).toLocaleDateString()}
                               </div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="text-sm text-gray-900">{participant.email}</div>
-                            <div className="text-sm text-gray-500">{participant.phone}</div>
+                            <div className="text-sm text-gray-900 dark:text-gray-100">{participant.email}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{participant.phone}</div>
                           </TableCell>
-                          <TableCell className="text-sm text-gray-900">
+                          <TableCell className="text-sm text-gray-900 dark:text-gray-100">
                             {participant.institution}
                           </TableCell>
                           <TableCell>
-                            <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                            <span className="font-mono text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1 rounded">
                               {participant.passcode}
                             </span>
                           </TableCell>
