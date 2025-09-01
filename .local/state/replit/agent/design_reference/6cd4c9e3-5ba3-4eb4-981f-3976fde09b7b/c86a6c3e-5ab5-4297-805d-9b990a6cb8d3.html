@@ -1,0 +1,934 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sivali Astronomy Union - Quiz Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#7C3AED',
+                        accent: '#06B6D4'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+
+<!-- @COMPONENT: MainApp [manages view states] -->
+<div id="app">
+
+    <!-- @COMPONENT: HomePage [participant registration and quiz access] -->
+    <div id="homepage" class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-primary to-secondary text-white">
+            <div class="container mx-auto px-4 py-8">
+                <div class="text-center">
+                    <div class="flex justify-center items-center mb-4">
+                        <i class="fas fa-satellite text-4xl mr-4"></i>
+                        <h1 class="text-4xl font-bold">Sivali Astronomy Union</h1>
+                    </div>
+                    <p class="text-xl opacity-90">Explore the Universe Through Knowledge</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-12">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- Welcome Section -->
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">Astronomy Quiz Challenge</h2>
+                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                        Test your knowledge of the cosmos! Register to receive your unique passcode and embark on an astronomical journey through our timed quiz.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    
+                    <!-- Registration Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <div class="text-center mb-6">
+                            <i class="fas fa-user-plus text-4xl text-primary mb-4"></i>
+                            <h3 class="text-2xl font-semibold text-gray-800">New Participant</h3>
+                            <p class="text-gray-600">Register to get your quiz passcode</p>
+                        </div>
+
+                        <!-- @COMPONENT: RegistrationForm [handles participant registration] -->
+                        <form data-event="submit:handleRegistration" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                                <input type="text" data-bind="participant.name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your full name" data-mock="true">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                                <input type="email" data-bind="participant.email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your email" data-mock="true">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                                <input type="tel" data-bind="participant.phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your phone number" data-mock="true">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Institution/Organization</label>
+                                <input type="text" data-bind="participant.institution" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="School, University, or Organization" data-mock="true">
+                            </div>
+                            <button type="submit" data-implementation="Should generate unique passcode and save registration" class="w-full bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200">
+                                Register & Get Passcode
+                            </button>
+                        </form>
+                        <!-- @END_COMPONENT: RegistrationForm -->
+                    </div>
+
+                    <!-- Quiz Access Card -->
+                    <div class="bg-white rounded-xl shadow-lg p-8">
+                        <div class="text-center mb-6">
+                            <i class="fas fa-key text-4xl text-secondary mb-4"></i>
+                            <h3 class="text-2xl font-semibold text-gray-800">Start Quiz</h3>
+                            <p class="text-gray-600">Enter your passcode to begin</p>
+                        </div>
+
+                        <!-- @COMPONENT: QuizAccessForm [validates passcode and starts quiz] -->
+                        <form data-event="submit:handleQuizAccess" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Passcode</label>
+                                <input type="text" data-bind="accessCode" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-center text-2xl font-mono tracking-widest" placeholder="XXXXXX" maxlength="6" data-mock="true">
+                            </div>
+                            <button type="submit" data-implementation="Should validate passcode and start quiz if valid" class="w-full bg-secondary text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-800 transition duration-200">
+                                Start Quiz
+                            </button>
+                        </form>
+                        <!-- @END_COMPONENT: QuizAccessForm -->
+
+                        <!-- Passcode Display (shown after registration) -->
+                        <div id="passcode-display" class="hidden mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="text-center">
+                                <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                <p class="text-green-800 font-semibold mb-2">Registration Successful!</p>
+                                <p class="text-sm text-green-700 mb-3">Your unique passcode is:</p>
+                                <div class="bg-white border-2 border-green-300 rounded-lg p-4">
+                                    <span data-bind="generatedPasscode" class="text-3xl font-mono font-bold text-green-800 tracking-widest">ABC123</span>
+                                </div>
+                                <p class="text-xs text-green-600 mt-2">Save this passcode - you'll need it to access the quiz</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Instructions -->
+                <div class="mt-12 bg-blue-50 border border-blue-200 rounded-xl p-8">
+                    <h4 class="text-xl font-semibold text-blue-800 mb-4 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Quiz Instructions
+                    </h4>
+                    <div class="grid md:grid-cols-2 gap-6 text-blue-700">
+                        <div>
+                            <h5 class="font-semibold mb-2">Before You Start:</h5>
+                            <ul class="space-y-1 text-sm">
+                                <li>• Ensure stable internet connection</li>
+                                <li>• You can only take the quiz once</li>
+                                <li>• Have a quiet environment ready</li>
+                                <li>• Quiz cannot be paused once started</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 class="font-semibold mb-2">During the Quiz:</h5>
+                            <ul class="space-y-1 text-sm">
+                                <li>• Each question has a time limit</li>
+                                <li>• Questions auto-advance when time expires</li>
+                                <li>• Choose the best answer from 4 options</li>
+                                <li>• Timer shows remaining time</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <!-- @END_COMPONENT: HomePage -->
+
+    <!-- @COMPONENT: QuizInterface [quiz taking interface with timer] -->
+    <div id="quiz-interface" class="hidden min-h-screen bg-gray-900 text-white">
+        <div class="container mx-auto px-4 py-8">
+            
+            <!-- Quiz Header -->
+            <div class="bg-gray-800 rounded-xl p-6 mb-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold">Astronomy Quiz</h1>
+                        <p class="text-gray-400">Question <span data-bind="currentQuestion">3</span> of <span data-bind="totalQuestions">15</span></p>
+                    </div>
+                    <div class="text-center">
+                        <!-- @COMPONENT: QuizTimer [countdown timer for current question] -->
+                        <div class="bg-red-600 rounded-full p-4 w-20 h-20 flex items-center justify-center" data-implementation="Timer should count down and auto-advance question">
+                            <span class="text-2xl font-bold" data-bind="timeRemaining">0:45</span>
+                        </div>
+                        <p class="text-sm text-gray-400 mt-2">Time Left</p>
+                        <!-- @END_COMPONENT: QuizTimer -->
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="mt-4">
+                    <div class="bg-gray-700 rounded-full h-2">
+                        <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 20%" data-bind="progressPercentage"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="bg-white text-gray-800 rounded-xl p-8 mb-8">
+                <h2 class="text-xl font-semibold mb-6" data-bind="question.text" data-mock="true">
+                    Which planet in our solar system has the most extensive ring system?
+                </h2>
+
+                <!-- @COMPONENT: MCQOptions [multiple choice question options] -->
+                <div class="space-y-4" data-implementation="Should handle option selection and submit">
+                    <!-- @MAP: question.options.map(option => ( -->
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:bg-blue-50 transition duration-200">
+                        <input type="radio" name="answer" value="A" class="mr-4 text-primary">
+                        <span class="font-medium text-gray-700">A.</span>
+                        <span class="ml-2" data-bind="option.text" data-mock="true">Jupiter</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:bg-blue-50 transition duration-200">
+                        <input type="radio" name="answer" value="B" class="mr-4 text-primary">
+                        <span class="font-medium text-gray-700">B.</span>
+                        <span class="ml-2" data-bind="option.text" data-mock="true">Saturn</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:bg-blue-50 transition duration-200">
+                        <input type="radio" name="answer" value="C" class="mr-4 text-primary">
+                        <span class="font-medium text-gray-700">C.</span>
+                        <span class="ml-2" data-bind="option.text" data-mock="true">Uranus</span>
+                    </label>
+                    <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary hover:bg-blue-50 transition duration-200">
+                        <input type="radio" name="answer" value="D" class="mr-4 text-primary">
+                        <span class="font-medium text-gray-700">D.</span>
+                        <span class="ml-2" data-bind="option.text" data-mock="true">Neptune</span>
+                    </label>
+                    <!-- @END_MAP )) -->
+                </div>
+                <!-- @END_COMPONENT: MCQOptions -->
+
+                <div class="flex justify-between mt-8">
+                    <button class="px-6 py-2 text-gray-600 hover:text-gray-800 transition duration-200" data-event="click:skipQuestion">
+                        Skip Question
+                    </button>
+                    <button class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200" data-event="click:submitAnswer">
+                        Submit Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: QuizInterface -->
+
+    <!-- @COMPONENT: AdminLogin [password protected admin access] -->
+    <div id="admin-login" class="hidden min-h-screen bg-gray-900 flex items-center justify-center">
+        <div class="bg-white rounded-xl p-8 w-full max-w-md mx-4">
+            <div class="text-center mb-8">
+                <i class="fas fa-shield-alt text-4xl text-primary mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Admin Access</h2>
+                <p class="text-gray-600">Enter password to continue</p>
+            </div>
+
+            <form data-event="submit:handleAdminLogin" data-implementation="Should validate admin password">
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" data-bind="adminPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter admin password" data-mock="true">
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200">
+                    Access Admin Panel
+                </button>
+            </form>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AdminLogin -->
+
+    <!-- @COMPONENT: AdminDashboard [main admin interface with tabs] -->
+    <div id="admin-dashboard" class="hidden min-h-screen bg-gray-50">
+        
+        <!-- Admin Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-cog text-2xl text-primary mr-3"></i>
+                        <h1 class="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
+                    </div>
+                    <button class="text-red-600 hover:text-red-800 font-medium" data-event="click:logout">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="bg-white border-b">
+            <div class="container mx-auto px-4">
+                <div class="flex space-x-8">
+                    <button class="py-4 px-2 border-b-2 border-primary text-primary font-medium tab-button active" data-tab="summary">Summary</button>
+                    <button class="py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 tab-button" data-tab="registrations">Registrations</button>
+                    <button class="py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 tab-button" data-tab="submissions">Quiz Submissions</button>
+                    <button class="py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 tab-button" data-tab="questions">Quiz Questions</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="container mx-auto px-4 py-8">
+
+            <!-- @COMPONENT: SummaryTab [overview and controls] -->
+            <div id="summary-tab" class="tab-content">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    
+                    <!-- Stats Cards -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-blue-100 p-3 rounded-full">
+                                        <i class="fas fa-users text-blue-600"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-600">Total Registrations</p>
+                                        <p class="text-2xl font-bold text-gray-800" data-bind="stats.totalRegistrations">42</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-green-100 p-3 rounded-full">
+                                        <i class="fas fa-clipboard-check text-green-600"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-600">Quiz Submissions</p>
+                                        <p class="text-2xl font-bold text-gray-800" data-bind="stats.totalSubmissions">28</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-xl p-6 shadow-sm">
+                                <div class="flex items-center">
+                                    <div class="bg-purple-100 p-3 rounded-full">
+                                        <i class="fas fa-question-circle text-purple-600"></i>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm text-gray-600">Total Questions</p>
+                                        <p class="text-2xl font-bold text-gray-800" data-bind="stats.totalQuestions">15</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+                            <div class="space-y-3">
+                                <!-- @MAP: recentActivity.map(activity => ( -->
+                                <div class="flex items-center py-2 border-b border-gray-100 last:border-b-0">
+                                    <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                        <i class="fas fa-user-plus text-blue-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-800" data-bind="activity.description" data-mock="true">John Doe registered for the quiz</p>
+                                        <p class="text-xs text-gray-500" data-bind="activity.timestamp" data-mock="true">2 minutes ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center py-2 border-b border-gray-100 last:border-b-0">
+                                    <div class="bg-green-100 p-2 rounded-full mr-3">
+                                        <i class="fas fa-clipboard-check text-green-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-gray-800" data-bind="activity.description" data-mock="true">Sarah Smith completed the quiz (Score: 85%)</p>
+                                        <p class="text-xs text-gray-500" data-bind="activity.timestamp" data-mock="true">5 minutes ago</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls Panel -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quiz Controls</h3>
+                            <div class="space-y-4">
+                                <!-- @STATE: registrationStatus:boolean = true -->
+                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                    <span class="text-sm font-medium text-gray-700">Registrations</span>
+                                    <button class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition duration-200" data-event="click:toggleRegistrations" data-implementation="Should toggle registration status">
+                                        <span data-bind="registrationStatus">Open</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- @STATE: quizStatus:boolean = true -->
+                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                    <span class="text-sm font-medium text-gray-700">Quiz Submissions</span>
+                                    <button class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition duration-200" data-event="click:toggleQuizSubmissions" data-implementation="Should toggle quiz submission status">
+                                        <span data-bind="quizStatus">Active</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                            <div class="space-y-3">
+                                <button class="w-full bg-primary text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-indigo-700 transition duration-200" data-event="click:exportResults">
+                                    <i class="fas fa-download mr-2"></i>Export Results
+                                </button>
+                                <button class="w-full bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-700 transition duration-200" data-event="click:clearAllData">
+                                    <i class="fas fa-trash mr-2"></i>Clear All Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SummaryTab -->
+
+            <!-- @COMPONENT: RegistrationsTab [view and manage registrations] -->
+            <div id="registrations-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-800">Participant Registrations</h2>
+                            <div class="flex space-x-3">
+                                <input type="text" placeholder="Search registrations..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-event="input:searchRegistrations">
+                                <button class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition duration-200" data-event="click:exportRegistrations">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participant</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Institution</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passcode</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- @MAP: registrations.map(registration => ( -->
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" data-bind="registration.name" data-mock="true">John Doe</div>
+                                            <div class="text-sm text-gray-500" data-bind="registration.registeredAt" data-mock="true">Registered 2 hours ago</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900" data-bind="registration.email" data-mock="true">john.doe@email.com</div>
+                                        <div class="text-sm text-gray-500" data-bind="registration.phone" data-mock="true">+1 234 567 8900</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="registration.institution" data-mock="true">
+                                        MIT
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded" data-bind="registration.passcode" data-mock="true">ABC123</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800" data-bind="registration.status" data-mock="true">
+                                            Completed
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-red-600 hover:text-red-900 transition duration-200" data-event="click:deleteRegistration" data-implementation="Should delete registration after confirmation">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" data-bind="registration.name" data-mock="true">Sarah Smith</div>
+                                            <div class="text-sm text-gray-500" data-bind="registration.registeredAt" data-mock="true">Registered 1 hour ago</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-900" data-bind="registration.email" data-mock="true">sarah.smith@email.com</div>
+                                        <div class="text-sm text-gray-500" data-bind="registration.phone" data-mock="true">+1 234 567 8901</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="registration.institution" data-mock="true">
+                                        Stanford University
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded" data-bind="registration.passcode" data-mock="true">XYZ789</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800" data-bind="registration.status" data-mock="true">
+                                            Pending
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-red-600 hover:text-red-900 transition duration-200" data-event="click:deleteRegistration" data-implementation="Should delete registration after confirmation">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: RegistrationsTab -->
+
+            <!-- @COMPONENT: SubmissionsTab [view quiz results and scores] -->
+            <div id="submissions-tab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-xl font-semibold text-gray-800">Quiz Submissions</h2>
+                            <div class="flex space-x-3">
+                                <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" data-event="change:filterSubmissions">
+                                    <option>All Submissions</option>
+                                    <option>Completed</option>
+                                    <option>In Progress</option>
+                                    <option>Abandoned</option>
+                                </select>
+                                <button class="bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition duration-200" data-event="click:exportSubmissions">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participant</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Questions</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Taken</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- @MAP: submissions.map(submission => ( -->
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" data-bind="submission.participantName" data-mock="true">John Doe</div>
+                                            <div class="text-sm text-gray-500" data-bind="submission.email" data-mock="true">john.doe@email.com</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="text-2xl font-bold text-green-600" data-bind="submission.score" data-mock="true">85</div>
+                                            <div class="ml-2">
+                                                <div class="text-sm text-gray-900">out of <span data-bind="submission.totalMarks" data-mock="true">100</span></div>
+                                                <div class="text-xs text-gray-500">85%</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span data-bind="submission.correctAnswers" data-mock="true">12</span>/<span data-bind="submission.totalQuestions" data-mock="true">15</span> correct
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="submission.timeTaken" data-mock="true">
+                                        12:34
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="submission.completedAt" data-mock="true">
+                                        2 hours ago
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-indigo-700 mr-3 transition duration-200" data-event="click:viewDetailedResults" data-implementation="Should show detailed answer breakdown">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-900 transition duration-200" data-event="click:deleteSubmission" data-implementation="Should delete submission after confirmation">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900" data-bind="submission.participantName" data-mock="true">Sarah Smith</div>
+                                            <div class="text-sm text-gray-500" data-bind="submission.email" data-mock="true">sarah.smith@email.com</div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="text-2xl font-bold text-blue-600" data-bind="submission.score" data-mock="true">72</div>
+                                            <div class="ml-2">
+                                                <div class="text-sm text-gray-900">out of <span data-bind="submission.totalMarks" data-mock="true">100</span></div>
+                                                <div class="text-xs text-gray-500">72%</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span data-bind="submission.correctAnswers" data-mock="true">11</span>/<span data-bind="submission.totalQuestions" data-mock="true">15</span> correct
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="submission.timeTaken" data-mock="true">
+                                        14:22
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-bind="submission.completedAt" data-mock="true">
+                                        1 hour ago
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary hover:text-indigo-700 mr-3 transition duration-200" data-event="click:viewDetailedResults" data-implementation="Should show detailed answer breakdown">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-900 transition duration-200" data-event="click:deleteSubmission" data-implementation="Should delete submission after confirmation">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: SubmissionsTab -->
+
+            <!-- @COMPONENT: QuestionsTab [manage quiz questions] -->
+            <div id="questions-tab" class="tab-content hidden">
+                <div class="space-y-6">
+                    
+                    <!-- Questions Header -->
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-semibold text-gray-800">Quiz Questions</h2>
+                        <button class="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition duration-200" data-event="click:addNewQuestion" data-implementation="Should open question creation form">
+                            <i class="fas fa-plus mr-2"></i>Add Question
+                        </button>
+                    </div>
+
+                    <!-- Questions List -->
+                    <div class="space-y-4">
+                        <!-- @MAP: questions.map((question, index) => ( -->
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <span class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium mr-3">Q<span data-bind="question.number" data-mock="true">1</span></span>
+                                        <span class="text-sm text-gray-500">Time: <span data-bind="question.timeLimit" data-mock="true">60</span>s</span>
+                                        <span class="text-sm text-gray-500 ml-4">Marks: <span data-bind="question.marks" data-mock="true">5</span></span>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-3" data-bind="question.text" data-mock="true">
+                                        Which planet in our solar system has the most extensive ring system?
+                                    </h3>
+                                    
+                                    <!-- Options -->
+                                    <div class="grid md:grid-cols-2 gap-2 mb-4">
+                                        <!-- @MAP: question.options.map((option, optionIndex) => ( -->
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">A</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Jupiter</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-green-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-green-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">B</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Saturn</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">C</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Uranus</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">D</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Neptune</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                        <!-- @END_MAP )) -->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-2 ml-4">
+                                    <button class="text-blue-600 hover:text-blue-800 p-2 transition duration-200" data-event="click:editQuestion" data-implementation="Should open question edit form">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800 p-2 transition duration-200" data-event="click:deleteQuestion" data-implementation="Should delete question after confirmation">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <span class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium mr-3">Q<span data-bind="question.number" data-mock="true">2</span></span>
+                                        <span class="text-sm text-gray-500">Time: <span data-bind="question.timeLimit" data-mock="true">45</span>s</span>
+                                        <span class="text-sm text-gray-500 ml-4">Marks: <span data-bind="question.marks" data-mock="true">3</span></span>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-3" data-bind="question.text" data-mock="true">
+                                        What is the closest star to Earth after the Sun?
+                                    </h3>
+                                    
+                                    <!-- Options -->
+                                    <div class="grid md:grid-cols-2 gap-2 mb-4">
+                                        <div class="flex items-center p-2 bg-green-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-green-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">A</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Proxima Centauri</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">B</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Alpha Centauri A</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">C</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Sirius</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                        <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+                                            <span class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-medium mr-3" data-bind="option.label" data-mock="true">D</span>
+                                            <span class="text-sm" data-bind="option.text" data-mock="true">Betelgeuse</span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2 hidden correct-answer"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex space-x-2 ml-4">
+                                    <button class="text-blue-600 hover:text-blue-800 p-2 transition duration-200" data-event="click:editQuestion" data-implementation="Should open question edit form">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="text-red-600 hover:text-red-800 p-2 transition duration-200" data-event="click:deleteQuestion" data-implementation="Should delete question after confirmation">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: QuestionsTab -->
+
+        </main>
+    </div>
+    <!-- @END_COMPONENT: AdminDashboard -->
+
+    <!-- @COMPONENT: QuestionFormModal [create/edit question modal] -->
+    <div id="question-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-gray-800">Add New Question</h3>
+                    <button class="text-gray-400 hover:text-gray-600" data-event="click:closeModal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <form data-event="submit:saveQuestion" data-implementation="Should save question with all options and settings">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Question Text</label>
+                            <textarea rows="3" data-bind="question.text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your question here..." data-mock="true"></textarea>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Time Limit (seconds)</label>
+                                <input type="number" data-bind="question.timeLimit" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="60" min="10" max="300" data-mock="true">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Marks</label>
+                                <input type="number" data-bind="question.marks" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="5" min="1" max="10" data-mock="true">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-4">Answer Options</label>
+                            <div class="space-y-3">
+                                <!-- @MAP: ['A', 'B', 'C', 'D'].map(letter => ( -->
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="correct_answer" value="A" class="text-primary">
+                                    <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">A</span>
+                                    <input type="text" data-bind="question.options.A" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter option A" data-mock="true">
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="correct_answer" value="B" class="text-primary">
+                                    <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">B</span>
+                                    <input type="text" data-bind="question.options.B" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter option B" data-mock="true">
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="correct_answer" value="C" class="text-primary">
+                                    <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">C</span>
+                                    <input type="text" data-bind="question.options.C" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter option C" data-mock="true">
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="correct_answer" value="D" class="text-primary">
+                                    <span class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">D</span>
+                                    <input type="text" data-bind="question.options.D" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter option D" data-mock="true">
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Select the radio button next to the correct answer</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-8">
+                        <button type="button" class="px-6 py-2 text-gray-600 hover:text-gray-800 transition duration-200" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition duration-200">
+                            Save Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: QuestionFormModal -->
+
+</div>
+<!-- @END_COMPONENT: MainApp -->
+
+<script>
+// TODO: Implement business logic, API calls, and state management
+
+(function() {
+    // Basic view switching functionality for demo purposes
+    const views = {
+        homepage: document.getElementById('homepage'),
+        quizInterface: document.getElementById('quiz-interface'),
+        adminLogin: document.getElementById('admin-login'),
+        adminDashboard: document.getElementById('admin-dashboard')
+    };
+
+    const tabs = {
+        summary: document.getElementById('summary-tab'),
+        registrations: document.getElementById('registrations-tab'),
+        submissions: document.getElementById('submissions-tab'),
+        questions: document.getElementById('questions-tab')
+    };
+
+    function showView(viewName) {
+        Object.values(views).forEach(view => view.classList.add('hidden'));
+        if (views[viewName]) {
+            views[viewName].classList.remove('hidden');
+        }
+    }
+
+    function showTab(tabName) {
+        Object.values(tabs).forEach(tab => tab.classList.add('hidden'));
+        if (tabs[tabName]) {
+            tabs[tabName].classList.remove('hidden');
+        }
+        
+        // Update tab button states
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('border-primary', 'text-primary');
+            btn.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-primary', 'text-primary');
+        }
+    }
+
+    // Demo view switching
+    document.addEventListener('click', function(e) {
+        // Admin access simulation
+        if (e.target.closest('#admin-login form button')) {
+            e.preventDefault();
+            showView('adminDashboard');
+        }
+        
+        // Tab switching
+        if (e.target.closest('.tab-button')) {
+            e.preventDefault();
+            const tabName = e.target.closest('.tab-button').dataset.tab;
+            showTab(tabName);
+        }
+        
+        // Quiz access simulation
+        if (e.target.closest('[data-event="submit:handleQuizAccess"]')) {
+            e.preventDefault();
+            showView('quizInterface');
+        }
+        
+        // Registration success simulation
+        if (e.target.closest('[data-event="submit:handleRegistration"]')) {
+            e.preventDefault();
+            document.getElementById('passcode-display').classList.remove('hidden');
+        }
+        
+        // Modal controls
+        if (e.target.closest('[data-event="click:addNewQuestion"]')) {
+            document.getElementById('question-modal').classList.remove('hidden');
+        }
+        
+        if (e.target.closest('[data-event="click:closeModal"]')) {
+            document.getElementById('question-modal').classList.add('hidden');
+        }
+        
+        // Back to homepage
+        if (e.target.closest('[data-event="click:logout"]')) {
+            showView('homepage');
+        }
+    });
+
+    // Quiz timer simulation
+    function startQuizTimer() {
+        let timeLeft = 45;
+        const timerElement = document.querySelector('[data-bind="timeRemaining"]');
+        
+        const timer = setInterval(() => {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            if (timerElement) {
+                timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            timeLeft--;
+            
+            if (timeLeft < 0) {
+                clearInterval(timer);
+                // Auto-advance to next question
+                // TODO: Implement auto-advance logic
+            }
+        }, 1000);
+    }
+
+    // Initialize with homepage view
+    showView('homepage');
+    
+    // Start timer when quiz interface is shown
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                const quizInterface = document.getElementById('quiz-interface');
+                if (quizInterface && !quizInterface.classList.contains('hidden')) {
+                    startQuizTimer();
+                }
+            }
+        });
+    });
+    
+    observer.observe(document.getElementById('quiz-interface'), {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+})();
+</script>
+
+</body>
+</html>
