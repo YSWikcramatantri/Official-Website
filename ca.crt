@@ -1,17 +1,4 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "@shared/schema";
-
-// Aiven PostgreSQL configuration
-const config = {
-  user: "avnadmin",
-  password: "AVNS_ybNeXKZAZjVc2vpPU_v",
-  host: "pg-2dc30e27-sccau.i.aivencloud.com",
-  port: 11319,
-  database: "defaultdb",
-  ssl: {
-    rejectUnauthorized: true,
-    ca: `-----BEGIN CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
 MIIEUDCCArigAwIBAgIUfABmt1KIqyySe9goPWcM0DS4gMYwDQYJKoZIhvcNAQEM
 BQAwQDE+MDwGA1UEAww1MmU3OTcwNTctNWRlNS00YjA3LWJhNmEtMDBmYWU0NjY0
 NDljIEdFTiAxIFByb2plY3QgQ0EwHhcNMjUwODI0MDQzNTUyWhcNMzUwODIyMDQz
@@ -36,9 +23,4 @@ XuAD0Pr+f6pLGCyu6Znjnz3p41eJnbz47aGyRRD2kbEHVfAUojNrMLjauEYUeSEd
 v/cWZmdBBtLcP8v7k6ThPbfaqe/txVXvFOajCwmAVW6cGwZ2NDY2+UKpoNC6RJNF
 qquvaRqgqFmA7kz4DO5MSXVD6iiFUhc07N9jRWVqNCp+uAH1Ht2CLLOBs2fEnqqM
 wQEiAw==
------END CERTIFICATE-----`,
-  },
-};
-
-export const pool = new Pool(config);
-export const db = drizzle(pool, { schema });
+-----END CERTIFICATE-----
