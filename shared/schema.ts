@@ -12,6 +12,16 @@ export const participants = pgTable("participants", {
   passcode: text("passcode").notNull().unique(),
   hasCompletedQuiz: boolean("has_completed_quiz").default(false),
   registeredAt: timestamp("registered_at").defaultNow(),
+  mode: text("mode").notNull().default("solo"), // 'solo' or 'team'
+  teamId: varchar("team_id"),
+});
+
+export const teams = pgTable("teams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  joinCode: text("join_code").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const questions = pgTable("questions", {
@@ -36,7 +46,8 @@ export const quizSubmissions = pgTable("quiz_submissions", {
 
 export const systemSettings = pgTable("system_settings", {
   id: varchar("id").primaryKey().default("system"),
-  registrationOpen: boolean("registration_open").default(true),
+  soloRegistrationOpen: boolean("solo_registration_open").default(true),
+  teamRegistrationOpen: boolean("team_registration_open").default(true),
   quizActive: boolean("quiz_active").default(true),
   adminPassword: text("admin_password").notNull().default("admin123"),
 });
@@ -46,6 +57,14 @@ export const insertParticipantSchema = createInsertSchema(participants).omit({
   passcode: true,
   hasCompletedQuiz: true,
   registeredAt: true,
+  mode: true, // mode is set by server
+  teamId: true, // teamId is set by server
+});
+
+export const insertTeamSchema = createInsertSchema(teams).omit({
+  id: true,
+  joinCode: true,
+  createdAt: true,
 });
 
 export const insertQuestionSchema = createInsertSchema(questions).omit({
@@ -62,11 +81,13 @@ export const updateSystemSettingsSchema = createInsertSchema(systemSettings).omi
 });
 
 export type InsertParticipant = z.infer<typeof insertParticipantSchema>;
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
 export type InsertQuestion = z.infer<typeof insertQuestionSchema>;
 export type InsertQuizSubmission = z.infer<typeof insertQuizSubmissionSchema>;
 export type UpdateSystemSettings = z.infer<typeof updateSystemSettingsSchema>;
 
 export type Participant = typeof participants.$inferSelect;
+export type Team = typeof teams.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type QuizSubmission = typeof quizSubmissions.$inferSelect;
 export type SystemSettings = typeof systemSettings.$inferSelect;
