@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: 255 255% 100%;
-  --foreground: 222 25% 10%;
+  --background: 0 0% 100%;
+  --foreground: 222 22% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 222 25% 12%;
+  --card-foreground: 222 22% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 25% 12%;
+  --popover-foreground: 222 22% 12%;
   --primary: 238 89% 58%;
   --primary-foreground: 0 0% 100%;
   --secondary: 258 90% 60%;
@@ -16,7 +16,7 @@
   --accent: 185 84% 42%;
   --accent-foreground: 0 0% 100%;
   --muted: 220 14% 96%;
-  --muted-foreground: 220 14% 28%;
+  --muted-foreground: 220 15% 26%;
   --destructive: 356 91% 54%;
   --destructive-foreground: 0 0% 100%;
   --border: 220 14% 90%;
@@ -28,7 +28,7 @@
   --chart-4: 147 79% 42%;
   --chart-5: 341 75% 51%;
   --sidebar: 0 0% 100%;
-  --sidebar-foreground: 222 25% 12%;
+  --sidebar-foreground: 222 22% 12%;
   --sidebar-primary: 238 89% 58%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 212 52% 93%;
@@ -55,7 +55,7 @@
   --accent: 185 84% 44%;
   --accent-foreground: 0 0% 100%;
   --muted: 220 10% 18%;
-  --muted-foreground: 220 10% 70%;
+  --muted-foreground: 220 12% 70%;
   --destructive: 356 91% 54%;
   --destructive-foreground: 0 0% 100%;
   --border: 220 10% 22%;
@@ -70,19 +70,14 @@
 
 @layer base {
   * { @apply border-[hsl(var(--border))]; }
-  html { font-family: var(--font-sans); }
   body { @apply antialiased bg-[hsl(var(--background))] text-[hsl(var(--foreground))]; }
-  h1,h2,h3,h4 { @apply text-[hsl(var(--foreground))]; }
-  a { @apply text-[hsl(var(--primary))]; }
 }
 
-/* Improve quiz/readability */
 .quiz-option { @apply flex items-center p-4 border-2 rounded-lg cursor-pointer transition duration-200 bg-[hsl(var(--card))] hover:border-[hsl(var(--primary))]; }
 .quiz-option.selected { @apply border-[hsl(var(--primary))] bg-[hsl(var(--muted))]; }
 .quiz-timer { @apply bg-red-600 rounded-full flex items-center justify-center w-20 h-20 text-white font-bold text-2xl; }
 .quiz-timer.warning { @apply bg-orange-500; }
 .quiz-timer.critical { @apply bg-red-700 animate-pulse; }
 
-/* Admin tabs */
 .admin-tab-button { @apply py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium cursor-pointer transition duration-200; }
 .admin-tab-button.active { @apply border-[hsl(var(--primary))] text-[hsl(var(--primary))]; }
