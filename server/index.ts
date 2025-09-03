@@ -1,4 +1,3 @@
-console.log("Starting server/index.ts");
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -63,7 +62,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  console.log("Calling registerRoutes");
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
