@@ -33,7 +33,10 @@ export default function AdminLogin() {
       const response = await apiRequest("POST", "/api/admin/login", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      try {
+        if (data?.token) localStorage.setItem("adminToken", data.token);
+      } catch {}
       toast({
         title: "Login Successful",
         description: "Welcome to the admin dashboard",
