@@ -88,7 +88,10 @@ export class DatabaseStorage implements IStorage {
     const [participant] = await db
       .insert(participants)
       .values({
-        ...insertParticipant,
+        name: (insertParticipant as any).name ?? `Participant ${passcode}`,
+        email: (insertParticipant as any).email ?? null,
+        phone: (insertParticipant as any).phone ?? null,
+        institution: (insertParticipant as any).institution ?? null,
         passcode,
         mode,
         schoolId,
@@ -133,11 +136,11 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  async registerSchoolWithMembers(schoolName: string, members: MemberInfo[]): Promise<{ school: School, newParticipants: Participant[] }> {
+  async registerSchoolWithMembers(schoolName: string, members: MemberInfo[], team = "A"): Promise<{ school: School, newParticipants: Participant[] }> {
     return db.transaction(async (tx) => {
-      const [school] = await tx.insert(schools).values({ name: schoolName }).returning();
+      const [school] = await tx.insert(schools).values({ name: schoolName, team }).returning();
 
-      const newParticipants = [];
+      const newParticipants: Participant[] = [];
       for (const member of members) {
         let passcode: string;
         do {
@@ -146,8 +149,8 @@ export class DatabaseStorage implements IStorage {
 
         const [p] = await tx.insert(participants).values({
           name: member.name,
-          email: member.email,
-          phone: member.phone,
+          email: (member as any).email ?? null,
+          phone: (member as any).phone ?? null,
           passcode,
           mode: 'school',
           schoolId: school.id,
