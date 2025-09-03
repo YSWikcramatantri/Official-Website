@@ -91,28 +91,28 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold flex items-center"><Settings className="mr-2" />Admin Dashboard</h1>
-          <Button onClick={() => setLocation("/")} variant="ghost"><Home className="mr-2" />Go Home</Button>
+    <div className="min-h-screen bg-[hsl(var(--background))]">
+      <header className="bg-[hsl(var(--card))] shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-6 py-5 flex justify-between items-center">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center text-[hsl(var(--foreground))]"><Settings className="mr-3" />Admin Dashboard</h1>
+          <Button onClick={() => setLocation("/")} variant="secondary" size="lg"><Home className="mr-2" />Go Home</Button>
         </div>
       </header>
 
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto px-6 py-6">
         <Tabs defaultValue="summary">
-          <TabsList>
-            <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="registrations">Registrations</TabsTrigger>
-            <TabsTrigger value="questions">Questions</TabsTrigger>
+          <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+            <TabsTrigger value="summary" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Summary</TabsTrigger>
+            <TabsTrigger value="registrations" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Registrations</TabsTrigger>
+            <TabsTrigger value="questions" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Questions</TabsTrigger>
           </TabsList>
-          <TabsContent value="summary" className="grid lg:grid-cols-3 gap-4 mt-4">
+          <TabsContent value="summary" className="grid lg:grid-cols-3 gap-6 mt-6">
             <div className="lg:col-span-2 space-y-4">
-              <div className="grid md:grid-cols-4 gap-4">
-                <Card><CardHeader><CardTitle>Solo Registrations</CardTitle></CardHeader><CardContent><p className="text-2xl">{stats?.totalSoloRegistrations ?? 0}</p></CardContent></Card>
-                <Card><CardHeader><CardTitle>Schools Registered</CardTitle></CardHeader><CardContent><p className="text-2xl">{stats?.totalSchools ?? 0}</p></CardContent></Card>
-                <Card><CardHeader><CardTitle>School Members</CardTitle></CardHeader><CardContent><p className="text-2xl">{stats?.totalSchoolMembers ?? 0}</p></CardContent></Card>
-                <Card><CardHeader><CardTitle>Total Submissions</CardTitle></CardHeader><CardContent><p className="text-2xl">{stats?.totalSubmissions ?? 0}</p></CardContent></Card>
+              <div className="grid md:grid-cols-4 gap-6">
+                <Card><CardHeader><CardTitle>Solo Registrations</CardTitle></CardHeader><CardContent><p className="text-4xl font-extrabold text-[hsl(var(--primary))]">{stats?.totalSoloRegistrations ?? 0}</p></CardContent></Card>
+                <Card><CardHeader><CardTitle>Schools Registered</CardTitle></CardHeader><CardContent><p className="text-4xl font-extrabold text-[hsl(var(--primary))]">{stats?.totalSchools ?? 0}</p></CardContent></Card>
+                <Card><CardHeader><CardTitle>School Members</CardTitle></CardHeader><CardContent><p className="text-4xl font-extrabold text-[hsl(var(--primary))]">{stats?.totalSchoolMembers ?? 0}</p></CardContent></Card>
+                <Card><CardHeader><CardTitle>Total Submissions</CardTitle></CardHeader><CardContent><p className="text-4xl font-extrabold text-[hsl(var(--primary))]">{stats?.totalSubmissions ?? 0}</p></CardContent></Card>
               </div>
               <Card>
                 <CardHeader><CardTitle className="flex items-center"><Trophy className="mr-2 text-yellow-500" />School Leaderboard</CardTitle></CardHeader>
@@ -126,10 +126,10 @@ export default function AdminDashboard() {
             <div>
               <Card>
                 <CardHeader><CardTitle>Quiz Controls</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between items-center"><p>Solo Registration</p><Button size="sm" onClick={() => updateSettingsMutation.mutate({ soloRegistrationOpen: !settings?.soloRegistrationOpen })}>{settings?.soloRegistrationOpen ? "Open" : "Closed"}</Button></div>
-                  <div className="flex justify-between items-center"><p>School Registration</p><Button size="sm" onClick={() => updateSettingsMutation.mutate({ schoolRegistrationOpen: !settings?.schoolRegistrationOpen })}>{settings?.schoolRegistrationOpen ? "Open" : "Closed"}</Button></div>
-                  <div className="flex justify-between items-center"><p>Quiz Activity</p><Button size="sm" onClick={() => updateSettingsMutation.mutate({ quizActive: !settings?.quizActive })}>{settings?.quizActive ? "Active" : "Inactive"}</Button></div>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center text-lg"><p>Solo Registration</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ soloRegistrationOpen: !settings?.soloRegistrationOpen })}>{settings?.soloRegistrationOpen ? "Open" : "Closed"}</Button></div>
+                  <div className="flex justify-between items-center text-lg"><p>School Registration</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ schoolRegistrationOpen: !settings?.schoolRegistrationOpen })}>{settings?.schoolRegistrationOpen ? "Open" : "Closed"}</Button></div>
+                  <div className="flex justify-between items-center text-lg"><p>Quiz Activity</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ quizActive: !settings?.quizActive })}>{settings?.quizActive ? "Active" : "Inactive"}</Button></div>
                 </CardContent>
               </Card>
             </div>
