@@ -12,6 +12,7 @@ declare module 'express-session' {
 }
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -25,9 +26,10 @@ app.use(session({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
   cookie: {
-    secure: false, // set to true in production with HTTPS
+    secure: true,
+    sameSite: 'none',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
