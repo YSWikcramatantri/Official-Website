@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1756756184295,
-      "tag": "0000_team_features",
+      "when": 1756830992872,
+      "tag": "0000_school_features",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1756831056070,
+      "tag": "0001_school_features_safe",
       "breakpoints": true
     }
   ]

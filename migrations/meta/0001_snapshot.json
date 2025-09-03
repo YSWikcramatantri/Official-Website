@@ -1,6 +1,6 @@
 {
-  "id": "bf31f700-2f28-4c03-ae90-10a5d39293b6",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "2294b7c0-e4ad-4fa8-99ec-2aa010e38915",
+  "prevId": "bf31f700-2f28-4c03-ae90-10a5d39293b6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -29,6 +29,12 @@
         },
         "phone": {
           "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "institution": {
+          "name": "institution",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -252,6 +258,13 @@
           "primaryKey": true,
           "notNull": true,
           "default": "'system'"
+        },
+        "registration_open": {
+          "name": "registration_open",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
         },
         "solo_registration_open": {
           "name": "solo_registration_open",
