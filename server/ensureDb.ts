@@ -16,15 +16,17 @@ async function run() {
   await safeExec(`CREATE TABLE IF NOT EXISTS schools (
     id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
+    team text DEFAULT 'A',
     created_at timestamp DEFAULT now()
   );`);
+  await safeExec(`ALTER TABLE schools ADD COLUMN IF NOT EXISTS team text DEFAULT 'A';`);
 
   // Participants base table
   await safeExec(`CREATE TABLE IF NOT EXISTS participants (
     id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
-    email text NOT NULL,
-    phone text NOT NULL,
+    email text,
+    phone text,
     institution text,
     passcode text NOT NULL,
     has_completed_quiz boolean DEFAULT false,
@@ -42,6 +44,8 @@ async function run() {
   await safeExec(`ALTER TABLE participants ADD COLUMN IF NOT EXISTS has_completed_quiz boolean DEFAULT false;`);
   // institution should be optional
   await safeExec(`ALTER TABLE participants ALTER COLUMN institution DROP NOT NULL;`);
+  await safeExec(`ALTER TABLE participants ALTER COLUMN email DROP NOT NULL;`);
+  await safeExec(`ALTER TABLE participants ALTER COLUMN phone DROP NOT NULL;`);
 
   // Questions
   await safeExec(`CREATE TABLE IF NOT EXISTS questions (
