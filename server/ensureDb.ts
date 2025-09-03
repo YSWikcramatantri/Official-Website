@@ -34,6 +34,8 @@ async function run() {
   );`);
   // Ensure unique passcode
   await safeExec(`CREATE UNIQUE INDEX IF NOT EXISTS participants_passcode_idx ON participants (passcode);`);
+  // Remove legacy unique constraint on email if present
+  await safeExec(`ALTER TABLE participants DROP CONSTRAINT IF EXISTS participants_email_unique;`);
   // Add/align columns
   await safeExec(`ALTER TABLE participants ADD COLUMN IF NOT EXISTS mode text DEFAULT 'solo';`);
   await safeExec(`ALTER TABLE participants ALTER COLUMN mode SET NOT NULL;`);
