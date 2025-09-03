@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, getQueryFn } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,11 +35,11 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: stats } = useQuery<DashboardStats>({ queryKey: ["/api/admin/stats"] });
-  const { data: settings } = useQuery<SystemSettings>({ queryKey: ["/api/admin/settings"] });
-  const { data: participants = [] } = useQuery<Participant[]>({ queryKey: ["/api/admin/participants"] });
-  const { data: schools = [] } = useQuery<SchoolWithMembers[]>({ queryKey: ["/api/admin/schools"] });
-  const { data: submissions = [] } = useQuery<EnrichedSubmission[]>({ queryKey: ["/api/admin/quiz-submissions"] });
+  const { data: stats } = useQuery<DashboardStats>({ queryKey: ["/api/admin/stats"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const { data: settings } = useQuery<SystemSettings | null>({ queryKey: ["/api/admin/settings"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const { data: participants = [] } = useQuery<Participant[]>({ queryKey: ["/api/admin/participants"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
+  const { data: schools = [] } = useQuery<SchoolWithMembers[]>({ queryKey: ["/api/admin/schools"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
+  const { data: submissions = [] } = useQuery<EnrichedSubmission[]>({ queryKey: ["/api/admin/quiz-submissions"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
 
   const updateSettingsMutation = useMutation({
     mutationFn: (data: Partial<SystemSettings>) => apiRequest("PUT", "/api/admin/settings", data),
@@ -64,6 +64,19 @@ export default function AdminDashboard() {
       .filter(s => s.school && s.members === 5) // Only show schools with full team submissions
       .sort((a, b) => b.score - a.score || a.time - b.time);
   }, [submissions, schools]);
+
+  if (settings === null) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full">
+          <CardHeader><CardTitle>Admin login required</CardTitle></CardHeader>
+          <CardContent>
+            <Button className="w-full" onClick={() => setLocation("/admin/login")}>Go to Admin Login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
