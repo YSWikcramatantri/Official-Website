@@ -14,8 +14,12 @@ export const participants = pgTable("participants", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
-  institution: text("institution").notNull(),
+  institution: text("institution"),
   passcode: text("passcode").notNull().unique(),
+  mode: text("mode").notNull(), // 'solo' | 'school'
+  schoolId: varchar("school_id"),
+  subject: text("subject"),
+  isLeader: boolean("is_leader").default(false),
   hasCompletedQuiz: boolean("has_completed_quiz").default(false),
   registeredAt: timestamp("registered_at").defaultNow(),
 });
@@ -42,9 +46,9 @@ export const quizSubmissions = pgTable("quiz_submissions", {
 
 export const systemSettings = pgTable("system_settings", {
   id: varchar("id").primaryKey().default("system"),
-  registrationOpen: boolean("registration_open").default(true),
-  quizActive: boolean("quiz_active").default(true),
-  adminPassword: text("admin_password").notNull().default("admin123"),
+  soloRegistrationOpen: boolean("solo_registration_open").default(true),
+  schoolRegistrationOpen: boolean("school_registration_open").default(true),
+  quizActive: boolean("quiz_active").default(false),
 });
 
 export const insertParticipantSchema = createInsertSchema(participants).omit({
