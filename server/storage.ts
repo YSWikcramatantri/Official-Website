@@ -209,12 +209,35 @@ export class DatabaseStorage implements IStorage {
   // System Settings
   async getSystemSettings(): Promise<SystemSettings> {
     const result = await db.select().from(systemSettings).where(eq(systemSettings.id, "system"));
-    return result[0];
+    if (result[0]) return result[0];
+
+    const defaults: Partial<SystemSettings> = {
+      id: "system",
+      soloRegistrationOpen: true,
+      schoolRegistrationOpen: true,
+      quizActive: false,
+    } as any;
+
+    const inserted = await db
+      .insert(systemSettings)
+      .values(defaults as any)
+      .onConflictDoNothing()
+      .returning();
+
+    if (inserted[0]) return inserted[0] as SystemSettings;
+
+    const [row] = await db.select().from(systemSettings).where(eq(systemSettings.id, "system"));
+    return row as SystemSettings;
   }
 
   async updateSystemSettings(settings: UpdateSystemSettings): Promise<SystemSettings> {
-    const [updated] = await db.update(systemSettings).set(settings).where(eq(systemSettings.id, "system")).returning();
-    return updated;
+    await this.getSystemSettings();
+    const [updated] = await db
+      .update(systemSettings)
+      .set(settings as any)
+      .where(eq(systemSettings.id, "system"))
+      .returning();
+    return updated as SystemSettings;
   }
 }
 
