@@ -108,14 +108,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get quiz questions (for authenticated participant)
-  app.get("/api/questions", async (req, res) => {
-    // ... (no changes needed)
+  // Get quiz questions (public fetch; client controls access via passcode verification)
+  app.get("/api/questions", async (_req, res) => {
+    try {
+      const qs = await storage.getAllQuestions();
+      res.json(qs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch questions" });
+    }
   });
 
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
-    // ... (no changes needed)
+    try {
+      const parsed = insertQuizSubmissionSchema.parse(req.body);
+      const submission = await storage.createQuizSubmission(parsed);
+      // mark participant as completed
+      await storage.updateParticipant(parsed.participantId, { hasCompletedQuiz: true });
+      res.json(submission);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid submission data", details: error.errors });
+      }
+      res.status(500).json({ message: "Failed to submit quiz" });
+    }
   });
 
   // Admin routes
@@ -138,7 +154,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.use("/api/admin", requireAdmin);
 
-  app.get("/api/admin/schools", async (req, res) => {
+  app.get("/api/admin/settings", async (_req, res) => {
+    try {
+      const s = await storage.getSystemSettings();
+      res.json(s);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.put("/api/admin/settings", async (req, res) => {
+    try {
+      const body = z
+        .object({
+          soloRegistrationOpen: z.boolean().optional(),
+          schoolRegistrationOpen: z.boolean().optional(),
+          quizActive: z.boolean().optional(),
+        })
+        .parse(req.body);
+      const updated = await storage.updateSystemSettings(body);
+      res.json(updated);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid settings payload", details: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  app.get("/api/admin/stats", async (_req, res) => {
+    try {
+      const [allParticipants, allSchools, allSubs] = await Promise.all([
+        storage.getAllParticipants(),
+        storage.getAllSchools(),
+        storage.getAllQuizSubmissions(),
+      ]);
+      const totalSoloRegistrations = allParticipants.filter(p => p.mode === "solo").length;
+      const totalSchoolMembers = allParticipants.filter(p => p.mode === "school").length;
+      const totalSchools = allSchools.length;
+      const totalSubmissions = allSubs.length;
+      res.json({ totalSoloRegistrations, totalSchools, totalSchoolMembers, totalSubmissions });
+    } catch {
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  app.get("/api/admin/participants", async (_req, res) => {
+    try {
+      const ps = await storage.getAllParticipants();
+      res.json(ps);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch participants" });
+    }
+  });
+
+  app.get("/api/admin/quiz-submissions", async (_req, res) => {
+    try {
+      const [subs, ps] = await Promise.all([
+        storage.getAllQuizSubmissions(),
+        storage.getAllParticipants(),
+      ]);
+      const enriched = subs.map(s => {
+        const p = ps.find(pp => pp.id === s.participantId);
+        return {
+          id: s.id,
+          participantId: s.participantId,
+          participantName: p?.name ?? "Unknown",
+          schoolId: p?.schoolId ?? null,
+          score: s.score,
+          timeTaken: s.timeTaken,
+        };
+      });
+      res.json(enriched);
+    } catch {
+      res.status(500).json({ message: "Failed to fetch submissions" });
+    }
+  });
+
+  app.get("/api/admin/schools", async (_req, res) => {
     try {
       const schools = await storage.getAllSchools();
       const participants = await storage.getAllParticipants();
@@ -151,8 +244,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch schools" });
     }
   });
-
-  // ... (other admin routes for participants, submissions, etc. would be updated similarly)
 
   const httpServer = createServer(app);
   return httpServer;
