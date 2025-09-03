@@ -37,7 +37,7 @@ export interface IStorage {
   createSchool(school: InsertSchool): Promise<School>;
   getAllSchools(): Promise<School[]>;
   deleteSchool(id: string): Promise<boolean>;
-  registerSchoolWithMembers(schoolName: string, members: MemberInfo[]): Promise<{ school: School, newParticipants: Participant[] }>;
+  registerSchoolWithMembers(schoolName: string, members: MemberInfo[], team?: string): Promise<{ school: School, newParticipants: Participant[] }>;
 
   // Questions
   getQuestion(id: string): Promise<Question | undefined>;
