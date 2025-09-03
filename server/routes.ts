@@ -1,15 +1,38 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { 
-  insertParticipantSchema, 
-  insertQuestionSchema, 
-  insertQuizSubmissionSchema, 
-  updateSystemSettingsSchema 
+import {
+  insertParticipantSchema,
+  insertQuestionSchema,
+  insertQuizSubmissionSchema,
+  updateSystemSettingsSchema
 } from "@shared/schema";
 import { z } from "zod";
+import crypto from "crypto";
 
 const SUBJECTS = ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"];
+
+const ADMIN_TOKEN_SECRET = process.env.SESSION_SECRET || "astronomy-quiz-secret-key";
+function signAdminToken(payload: object, ttlMs = 24 * 60 * 60 * 1000) {
+  const body = { ...payload, exp: Date.now() + ttlMs };
+  const encoded = Buffer.from(JSON.stringify(body)).toString("base64url");
+  const sig = crypto.createHmac("sha256", ADMIN_TOKEN_SECRET).update(encoded).digest("base64url");
+  return `${encoded}.${sig}`;
+}
+function verifyAdminToken(token?: string) {
+  if (!token) return null;
+  const [encoded, sig] = token.split(".");
+  if (!encoded || !sig) return null;
+  const expected = crypto.createHmac("sha256", ADMIN_TOKEN_SECRET).update(encoded).digest("base64url");
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  try {
+    const body = JSON.parse(Buffer.from(encoded, "base64url").toString());
+    if (typeof body.exp !== "number" || Date.now() > body.exp) return null;
+    return body;
+  } catch {
+    return null;
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
 
@@ -136,8 +159,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Admin routes
   const requireAdmin = (req: any, res: any, next: any) => {
-    if (!req.session?.isAdmin) return res.status(401).json({ message: "Admin access required" });
-    next();
+    const auth = req.headers["authorization"]; // Bearer <token>
+    const token = auth?.toString().startsWith("Bearer ") ? auth!.toString().slice(7) : undefined;
+    const verified = verifyAdminToken(token);
+    if (verified || req.session?.isAdmin) return next();
+    return res.status(401).json({ message: "Admin access required" });
   };
 
   app.post("/api/admin/login", async (req, res) => {
@@ -149,7 +175,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.session.isAdmin = true;
         req.session.save((saveErr: any) => {
           if (saveErr) return res.status(500).json({ message: "Failed to save session" });
-          res.json({ message: "Login successful" });
+          const token = signAdminToken({ role: "admin" });
+          res.json({ message: "Login successful", token });
         });
       });
     } else {
