@@ -26,10 +26,17 @@ const passcodeSchema = z.object({
 const schoolRegistrationSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
   team: z.enum(["A", "B"]).default("A"),
-  members: z.array(insertParticipantSchema.extend({
-    subject: z.enum(SUBJECTS as [string, ...string[]]),
-    isLeader: z.boolean(),
-  })).length(5),
+  members: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().min(1),
+        phone: z.string().min(1),
+        subject: z.enum(SUBJECTS as [string, ...string[]]),
+        isLeader: z.boolean(),
+      }),
+    )
+    .length(5, "5 members are required"),
 });
 
 type SchoolRegistration = z.infer<typeof schoolRegistrationSchema>;
@@ -162,7 +169,10 @@ export default function Home() {
                 <CardHeader><CardTitle>School Team Registration</CardTitle></CardHeader>
                 <CardContent>
                   <Form {...schoolForm}>
-                    <form onSubmit={schoolForm.handleSubmit(data => schoolRegisterMutation.mutate(data))} className="space-y-6">
+                    <form onSubmit={schoolForm.handleSubmit(
+                      (data) => schoolRegisterMutation.mutate(data),
+                      () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
+                    )} className="space-y-6">
                       <FormField control={schoolForm.control} name="schoolName" render={({ field }) => (<FormItem><FormLabel>School Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
 
                       <div className="mb-2">
