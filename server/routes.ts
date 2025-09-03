@@ -143,10 +143,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/login", async (req, res) => {
     const { password } = req.body;
     if (password === process.env.ADMIN_PASSWORD) {
-      if (req.session) {
+      if (!req.session) return res.status(500).json({ message: "Session not available" });
+      req.session.regenerate((err: any) => {
+        if (err) return res.status(500).json({ message: "Failed to start session" });
         req.session.isAdmin = true;
-      }
-      res.json({ message: "Login successful" });
+        req.session.save((saveErr: any) => {
+          if (saveErr) return res.status(500).json({ message: "Failed to save session" });
+          res.json({ message: "Login successful" });
+        });
+      });
     } else {
       res.status(401).json({ message: "Invalid credentials" });
     }
