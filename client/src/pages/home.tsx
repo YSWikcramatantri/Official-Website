@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertParticipantSchema } from "@shared/schema";
-import type { InsertParticipant, SystemSettings } from "@shared/schema";
+import type { SystemSettings } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -41,8 +41,15 @@ export default function Home() {
 
   const { data: settings } = useQuery<Partial<SystemSettings>>({ queryKey: ['/api/settings'] });
 
-  const soloForm = useForm<InsertParticipant>({
-    resolver: zodResolver(insertParticipantSchema),
+  const soloForm = useForm<{ name: string; email: string; phone: string; institution?: string }>({
+    resolver: zodResolver(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().min(1),
+        institution: z.string().optional(),
+      }),
+    ),
     defaultValues: { name: "", email: "", phone: "" },
   });
 
@@ -67,7 +74,7 @@ export default function Home() {
   });
 
   const soloRegisterMutation = useMutation({
-    mutationFn: (data: InsertParticipant) => apiRequest("POST", "/api/participants", data).then(res => res.json()),
+    mutationFn: (data: { name: string; email: string; phone: string; institution?: string }) => apiRequest("POST", "/api/participants", data).then(res => res.json()),
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
       toast({ title: "Registration Successful!" });
@@ -124,7 +131,19 @@ export default function Home() {
 
             {/* Solo Registration */}
             <TabsContent value="solo">
-              {/* ... solo registration form ... */}
+              <Card>
+                <CardHeader><CardTitle>Solo Registration</CardTitle></CardHeader>
+                <CardContent>
+                  <Form {...soloForm}>
+                    <form onSubmit={soloForm.handleSubmit((data) => soloRegisterMutation.mutate(data))} className="space-y-6">
+                      <FormField control={soloForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={soloForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <FormField control={soloForm.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                      <Button type="submit" className="w-full" disabled={soloRegisterMutation.isPending}>{soloRegisterMutation.isPending ? "Registering..." : "Register & Get Passcode"}</Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* School Registration */}
