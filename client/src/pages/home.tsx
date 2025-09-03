@@ -25,6 +25,7 @@ const passcodeSchema = z.object({
 
 const schoolRegistrationSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
+  team: z.enum(["A", "B"]).default("A"),
   members: z.array(insertParticipantSchema.extend({
     subject: z.enum(SUBJECTS as [string, ...string[]]),
     isLeader: z.boolean(),
@@ -57,6 +58,7 @@ export default function Home() {
     resolver: zodResolver(schoolRegistrationSchema),
     defaultValues: {
       schoolName: "",
+      team: "A",
       members: SUBJECTS.map(subject => ({
         name: "",
         email: "",
@@ -132,16 +134,24 @@ export default function Home() {
             {/* Solo Registration */}
             <TabsContent value="solo">
               <Card>
-                <CardHeader><CardTitle>Solo Registration</CardTitle></CardHeader>
-                <CardContent>
-                  <Form {...soloForm}>
-                    <form onSubmit={soloForm.handleSubmit((data) => soloRegisterMutation.mutate(data))} className="space-y-6">
-                      <FormField control={soloForm.control} name="name" render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <FormField control={soloForm.control} name="email" render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <FormField control={soloForm.control} name="phone" render={({ field }) => (<FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                      <Button type="submit" className="w-full" disabled={soloRegisterMutation.isPending}>{soloRegisterMutation.isPending ? "Registering..." : "Register & Get Passcode"}</Button>
-                    </form>
-                  </Form>
+                <CardHeader><CardTitle>Solo Passcode</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <Button onClick={async () => {
+                    try {
+                      const res = await apiRequest("POST", "/api/participants/solo-passcode");
+                      const data = await res.json();
+                      setGeneratedPasscodes([{ name: data.participant.name, passcode: data.passcode, subject: "" }]);
+                      toast({ title: "Passcode Generated" });
+                    } catch (e: any) {
+                      toast({ title: "Failed to generate", description: e.message, variant: "destructive" });
+                    }
+                  }} className="w-full">Generate Solo Passcode</Button>
+                  {generatedPasscodes.length > 0 && (
+                    <div className="p-4 border rounded">
+                      <div className="font-mono text-lg flex justify-between"><span>Passcode:</span><span>{generatedPasscodes[0].passcode}</span></div>
+                      <Button className="mt-3" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -154,6 +164,14 @@ export default function Home() {
                   <Form {...schoolForm}>
                     <form onSubmit={schoolForm.handleSubmit(data => schoolRegisterMutation.mutate(data))} className="space-y-6">
                       <FormField control={schoolForm.control} name="schoolName" render={({ field }) => (<FormItem><FormLabel>School Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+                      <div className="mb-2">
+                        <FormLabel>Team</FormLabel>
+                        <RadioGroup defaultValue="A" onValueChange={(v) => schoolForm.setValue('team', v as any)} className="flex gap-6 mt-2">
+                          <div className="flex items-center gap-2"><RadioGroupItem value="A" id="teamA" /><label htmlFor="teamA">Team A</label></div>
+                          <div className="flex items-center gap-2"><RadioGroupItem value="B" id="teamB" /><label htmlFor="teamB">Team B</label></div>
+                        </RadioGroup>
+                      </div>
 
                       <RadioGroup onValueChange={(value) => schoolForm.setValue('members', schoolForm.getValues('members').map((m, i) => ({...m, isLeader: i === parseInt(value)})))}>
                         {fields.map((field, index) => (
