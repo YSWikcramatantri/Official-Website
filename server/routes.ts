@@ -46,7 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Solo Participant Registration
+  // Solo Participant Registration (form-based)
   app.post("/api/participants", async (req, res) => {
     try {
       const settings = await storage.getSystemSettings();
@@ -57,19 +57,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const participantData = z
         .object({
           name: z.string().min(1),
-          email: z.string().email(),
-          phone: z.string().min(1),
+          email: z.string().optional(),
+          phone: z.string().optional(),
           institution: z.string().optional(),
         })
         .parse(req.body);
 
-      const participant = await storage.createParticipant(participantData, 'solo');
+      const participant = await storage.createParticipant(participantData as any, 'solo');
       res.json({ newParticipants: [participant] });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid registration data", details: error.errors });
       }
       res.status(400).json({ message: "Invalid registration data" });
+    }
+  });
+
+  // Solo: simple passcode generator (no form)
+  app.post("/api/participants/solo-passcode", async (_req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      if (!settings.soloRegistrationOpen) {
+        return res.status(403).json({ message: "Solo registration is currently closed" });
+      }
+      const name = `Solo ${Date.now()}`;
+      const participant = await storage.createParticipant({ name } as any, 'solo');
+      res.json({ passcode: participant.passcode, participant });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate passcode" });
     }
   });
 
@@ -83,11 +98,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const schoolRegistrationSchema = z.object({
         schoolName: z.string().min(1, "School name is required"),
+        team: z.enum(["A", "B"]).default("A"),
         members: z
           .array(
             z.object({
               name: z.string().min(1),
-              email: z.string().email(),
+              email: z.string().min(1),
               phone: z.string().min(1),
               subject: z.enum(SUBJECTS as [string, ...string[]]),
               isLeader: z.boolean(),
@@ -96,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .length(5, "A school team must have exactly 5 members."),
       });
 
-      const { schoolName, members } = schoolRegistrationSchema.parse(req.body);
+      const { schoolName, team, members } = schoolRegistrationSchema.parse(req.body);
 
       // Validate leader
       if (members.filter(m => m.isLeader).length !== 1) {
@@ -110,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Each member must be assigned a unique subject from the required list." });
       }
 
-      const result = await storage.registerSchoolWithMembers(schoolName, members);
+      const result = await storage.registerSchoolWithMembers(schoolName, members, team);
 
       res.json({
         school: result.school,
