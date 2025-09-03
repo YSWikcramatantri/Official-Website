@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,6 +38,11 @@ export default function AdminLogin() {
         title: "Login Successful",
         description: "Welcome to the admin dashboard",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/participants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/schools"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/quiz-submissions"] });
       setLocation('/admin/dashboard');
     },
     onError: (error) => {
