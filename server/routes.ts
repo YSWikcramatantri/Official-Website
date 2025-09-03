@@ -124,6 +124,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
+  app.post("/api/admin/login", async (req, res) => {
+    const { password } = req.body;
+    if (password === process.env.ADMIN_PASSWORD) {
+      if (req.session) {
+        req.session.isAdmin = true;
+      }
+      res.json({ message: "Login successful" });
+    } else {
+      res.status(401).json({ message: "Invalid credentials" });
+    }
+  });
+
   app.use("/api/admin", requireAdmin);
 
   app.get("/api/admin/schools", async (req, res) => {
