@@ -141,7 +141,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid registration data", details: error.errors });
       }
-      res.status(500).json({ message: "An unexpected error occurred." });
+      console.error("/api/schools/register failed:", error);
+      const message = (error as any)?.message || "An unexpected error occurred.";
+      res.status(500).json({ message });
     }
   });
 
