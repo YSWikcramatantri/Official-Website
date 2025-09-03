@@ -54,11 +54,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Solo registration is currently closed" });
       }
 
-      const participantData = insertParticipantSchema.parse(req.body);
+      const participantData = z
+        .object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          phone: z.string().min(1),
+          institution: z.string().optional(),
+        })
+        .parse(req.body);
+
       const participant = await storage.createParticipant(participantData, 'solo');
-      
       res.json({ newParticipants: [participant] });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid registration data", details: error.errors });
+      }
       res.status(400).json({ message: "Invalid registration data" });
     }
   });
@@ -73,10 +83,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const schoolRegistrationSchema = z.object({
         schoolName: z.string().min(1, "School name is required"),
-        members: z.array(insertParticipantSchema.extend({
-          subject: z.enum(SUBJECTS as [string, ...string[]]),
-          isLeader: z.boolean(),
-        })).length(5, "A school team must have exactly 5 members."),
+        members: z
+          .array(
+            z.object({
+              name: z.string().min(1),
+              email: z.string().email(),
+              phone: z.string().min(1),
+              subject: z.enum(SUBJECTS as [string, ...string[]]),
+              isLeader: z.boolean(),
+            }),
+          )
+          .length(5, "A school team must have exactly 5 members."),
       });
 
       const { schoolName, members } = schoolRegistrationSchema.parse(req.body);
