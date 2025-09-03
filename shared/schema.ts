@@ -6,14 +6,15 @@ import { z } from "zod";
 export const schools = pgTable("schools", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
+  team: text("team").default("A"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const participants = pgTable("participants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone").notNull(),
+  email: text("email"),
+  phone: text("phone"),
   institution: text("institution"),
   passcode: text("passcode").notNull().unique(),
   mode: text("mode").notNull(), // 'solo' | 'school'
