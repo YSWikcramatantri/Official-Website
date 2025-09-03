@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
 
   const statsQuery = useQuery<DashboardStats>({ queryKey: ["/api/admin/stats"], queryFn: getQueryFn({ on401: "returnNull" }) });
-  const settingsQuery = useQuery<SystemSettings | null>({ queryKey: ["/api/admin/settings"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const settingsQuery = useQuery<SystemSettings | null>({ queryKey: ["/api/admin/settings"], queryFn: getQueryFn({ on401: "returnNull" }), refetchOnMount: true });
   const participantsQuery = useQuery<Participant[] | null>({ queryKey: ["/api/admin/participants"], queryFn: getQueryFn({ on401: "returnNull" }) });
   const schoolsQuery = useQuery<SchoolWithMembers[] | null>({ queryKey: ["/api/admin/schools"], queryFn: getQueryFn({ on401: "returnNull" }) });
   const submissionsQuery = useQuery<EnrichedSubmission[] | null>({ queryKey: ["/api/admin/quiz-submissions"], queryFn: getQueryFn({ on401: "returnNull" }) });
@@ -70,6 +70,12 @@ export default function AdminDashboard() {
       .filter(s => s.school && s.members === 5)
       .sort((a, b) => b.score - a.score || a.time - b.time);
   }, [submissions, schools]);
+
+  if (settingsQuery.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">Loading…</div>
+    );
+  }
 
   if (settings === null) {
     return (
