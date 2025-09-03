@@ -35,11 +35,17 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: stats } = useQuery<DashboardStats>({ queryKey: ["/api/admin/stats"], queryFn: getQueryFn({ on401: "returnNull" }) });
-  const { data: settings } = useQuery<SystemSettings | null>({ queryKey: ["/api/admin/settings"], queryFn: getQueryFn({ on401: "returnNull" }) });
-  const { data: participants = [] } = useQuery<Participant[]>({ queryKey: ["/api/admin/participants"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
-  const { data: schools = [] } = useQuery<SchoolWithMembers[]>({ queryKey: ["/api/admin/schools"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
-  const { data: submissions = [] } = useQuery<EnrichedSubmission[]>({ queryKey: ["/api/admin/quiz-submissions"], queryFn: getQueryFn({ on401: "returnNull" }) as any }) || { data: [] } as any;
+  const statsQuery = useQuery<DashboardStats>({ queryKey: ["/api/admin/stats"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const settingsQuery = useQuery<SystemSettings | null>({ queryKey: ["/api/admin/settings"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const participantsQuery = useQuery<Participant[] | null>({ queryKey: ["/api/admin/participants"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const schoolsQuery = useQuery<SchoolWithMembers[] | null>({ queryKey: ["/api/admin/schools"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const submissionsQuery = useQuery<EnrichedSubmission[] | null>({ queryKey: ["/api/admin/quiz-submissions"], queryFn: getQueryFn({ on401: "returnNull" }) });
+
+  const stats = statsQuery.data ?? undefined;
+  const settings = settingsQuery.data ?? null;
+  const participants = participantsQuery.data ?? [];
+  const schools = (schoolsQuery.data ?? []).map(s => ({ ...s, members: s.members ?? [] }));
+  const submissions = submissionsQuery.data ?? [];
 
   const updateSettingsMutation = useMutation({
     mutationFn: (data: Partial<SystemSettings>) => apiRequest("PUT", "/api/admin/settings", data),
@@ -51,7 +57,7 @@ export default function AdminDashboard() {
 
   const schoolLeaderboard = useMemo(() => {
     const schoolScores: Record<string, { score: number; time: number; members: number }> = {};
-    submissions.forEach(s => {
+    (submissions ?? []).forEach(s => {
       if (s.schoolId) {
         if (!schoolScores[s.schoolId]) schoolScores[s.schoolId] = { score: 0, time: 0, members: 0 };
         schoolScores[s.schoolId].score += s.score;
@@ -61,7 +67,7 @@ export default function AdminDashboard() {
     });
     return Object.entries(schoolScores)
       .map(([schoolId, data]) => ({ schoolId, ...data, school: schools.find(s => s.id === schoolId) }))
-      .filter(s => s.school && s.members === 5) // Only show schools with full team submissions
+      .filter(s => s.school && s.members === 5)
       .sort((a, b) => b.score - a.score || a.time - b.time);
   }, [submissions, schools]);
 
@@ -136,7 +142,7 @@ export default function AdminDashboard() {
                       <TableRow key={s.id}>
                         <TableCell>{s.name}</TableCell>
                         <TableCell>
-                          {s.members.map(m => <div key={m.id}>{m.name} ({m.subject}) {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>)}
+                          {(s.members ?? []).map(m => <div key={m.id}>{m.name} ({m.subject}) {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>)}
                         </TableCell>
                       </TableRow>
                     ))}
