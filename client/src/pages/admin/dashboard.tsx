@@ -83,7 +83,7 @@ export default function AdminDashboard() {
         <Card className="max-w-md w-full">
           <CardHeader><CardTitle>Admin login required</CardTitle></CardHeader>
           <CardContent>
-            <Button className="w-full" onClick={() => setLocation("/admin/login")}>Go to Admin Login</Button>
+            <Button className="w-full" onClick={() => setLocation("/admin/x9k2p8m7q1")}>Go to Admin Login</Button>
           </CardContent>
         </Card>
       </div>
