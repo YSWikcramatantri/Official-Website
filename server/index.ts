@@ -35,12 +35,16 @@ app.use(session({
 
 // CORS and preflight handling to support API requests with credentials and Authorization header
 app.use((req, res, next) => {
-  const origin = req.headers.origin || req.headers.host || '';
+  const origin = req.headers.origin;
   if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Origin', origin as string);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Vary', 'Origin');
+  } else {
+    // fallback for same-origin or server-side
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
