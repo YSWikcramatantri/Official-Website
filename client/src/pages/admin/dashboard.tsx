@@ -96,14 +96,33 @@ export default function AdminDashboard() {
       console.log('Attempting delete', url, 'adminTokenPresent=', !!localStorage.getItem('adminToken'));
       const res = await apiRequest('DELETE', url);
       console.log('Delete response', res.status, await (async () => { try { return await res.clone().text(); } catch { return ''; } })());
-      // try to parse JSON response if any
       try { await res.json(); } catch {}
       toast({ title: successTitle });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      return;
+    } catch (e) {
+      console.warn('DELETE failed; attempting POST fallback', e);
+    }
+
+    // fallback: some clients/filters block DELETE; try POST to /delete endpoint
+    try {
+      // extract resource and id
+      const match = url.match(/\/api\/admin\/(participants|schools)\/(.+)$/);
+      if (!match) throw new Error('Unsupported delete URL');
+      const resource = match[1];
+      const id = match[2];
+      const postUrl = `/api/admin/${resource}/delete`;
+      const res2 = await apiRequest('POST', postUrl, { id });
+      console.log('POST delete response', res2.status, await (async () => { try { return await res2.clone().text(); } catch { return ''; } })());
+      try { await res2.json(); } catch {}
+      toast({ title: successTitle });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      return;
     } catch (e) {
       const errMsg = (e as Error)?.message ?? 'Delete failed';
-      console.error('Delete failed', url, e);
+      console.error('Fallback delete failed', url, e);
       toast({ title: 'Delete failed', description: errMsg, variant: 'destructive' });
     }
   };
