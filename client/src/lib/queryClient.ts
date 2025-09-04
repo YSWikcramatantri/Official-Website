@@ -28,11 +28,15 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const headers: Record<string, string> = {
+    Accept: "application/json",
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...getAuthHeaders(),
   };
-  // Use relative URLs in the browser to avoid CORS issues; only build absolute URLs when not in browser
-  const target = typeof window === 'undefined' ? (url.toString().startsWith('http') ? url.toString() : `${process.env.SERVER_ORIGIN || ''}${url}`) : url;
+  // Build absolute URL in the browser to ensure requests go to the same origin as the page
+  const target = typeof window === 'undefined'
+    ? (url.toString().startsWith('http') ? url.toString() : `${process.env.SERVER_ORIGIN || ''}${url}`)
+    : (url.toString().startsWith('http') ? url.toString() : `${window.location.origin}${url}`);
+
   let res: Response;
   try {
     res = await fetch(target as string, {
