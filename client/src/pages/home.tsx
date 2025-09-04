@@ -45,6 +45,7 @@ type GeneratedPasscode = { name: string; passcode: string; subject: string };
 export default function Home() {
   const [, setLocation] = useLocation();
   const [generatedPasscodes, setGeneratedPasscodes] = useState<GeneratedPasscode[]>([]);
+  const [registeredSchool, setRegisteredSchool] = useState<{ name: string; team: string } | null>(null);
   const { toast } = useToast();
 
   const { data: settings } = useQuery<Partial<SystemSettings>>({ queryKey: ['/api/settings'] });
@@ -96,6 +97,7 @@ export default function Home() {
     mutationFn: (data: SchoolRegistration) => apiRequest("POST", "/api/schools/register", data).then(res => res.json()),
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
+      setRegisteredSchool({ name: data.school?.name ?? '', team: data.school?.team ?? 'A' });
       toast({ title: "School Registration Successful!" });
       schoolForm.reset();
     },
@@ -213,6 +215,9 @@ export default function Home() {
                 <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Registration Successful!</CardTitle></CardHeader>
                 <CardContent>
                   <p>Please save the following passcodes. Each member will need their unique passcode to access the quiz.</p>
+                  {registeredSchool && (
+                    <div className="mb-2 text-sm text-muted-foreground">School: <strong>{registeredSchool.name}</strong> • Team: <strong>{registeredSchool.team}</strong></div>
+                  )}
                   <div className="my-4 p-4 border rounded-md">
                     {generatedPasscodes.map(p => <div key={p.passcode} className="font-mono flex justify-between"><span>{p.name} ({p.subject}):</span><span>{p.passcode}</span></div>)}
                   </div>
