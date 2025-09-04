@@ -190,12 +190,6 @@ export default function Home() {
                     </form>
                   </Form>
 
-                  {generatedPasscodes.length > 0 && (
-                    <div className="p-4 border rounded">
-                      <div className="font-mono text-lg flex justify-between"><span>Passcode:</span><span>{generatedPasscodes[0].passcode}</span></div>
-                      <Button className="mt-3" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>
