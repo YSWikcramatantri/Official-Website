@@ -127,9 +127,9 @@ export default function AdminDashboard() {
               <Card>
                 <CardHeader><CardTitle>Quiz Controls</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center text-lg"><p>Solo Registration</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ soloRegistrationOpen: !settings?.soloRegistrationOpen })}>{settings?.soloRegistrationOpen ? "Open" : "Closed"}</Button></div>
-                  <div className="flex justify-between items-center text-lg"><p>School Registration</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ schoolRegistrationOpen: !settings?.schoolRegistrationOpen })}>{settings?.schoolRegistrationOpen ? "Open" : "Closed"}</Button></div>
-                  <div className="flex justify-between items-center text-lg"><p>Quiz Activity</p><Button size="lg" onClick={() => updateSettingsMutation.mutate({ quizActive: !settings?.quizActive })}>{settings?.quizActive ? "Active" : "Inactive"}</Button></div>
+                  <div className="flex justify-between items-center text-lg"><p>Solo Registration</p><Button size="lg" className="text-black font-bold" onClick={() => updateSettingsMutation.mutate({ soloRegistrationOpen: !settings?.soloRegistrationOpen })}>{settings?.soloRegistrationOpen ? "Open" : "Closed"}</Button></div>
+                  <div className="flex justify-between items-center text-lg"><p>School Registration</p><Button size="lg" className="text-black font-bold" onClick={() => updateSettingsMutation.mutate({ schoolRegistrationOpen: !settings?.schoolRegistrationOpen })}>{settings?.schoolRegistrationOpen ? "Open" : "Closed"}</Button></div>
+                  <div className="flex justify-between items-center text-lg"><p>Quiz Activity</p><Button size="lg" className="text-black font-bold" onClick={() => updateSettingsMutation.mutate({ quizActive: !settings?.quizActive })}>{settings?.quizActive ? "Active" : "Inactive"}</Button></div>
                 </CardContent>
               </Card>
             </div>
