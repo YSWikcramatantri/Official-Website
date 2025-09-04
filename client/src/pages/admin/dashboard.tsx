@@ -93,7 +93,9 @@ export default function AdminDashboard() {
   // helper to delete resources
   const handleDeleteResource = async (url: string, successTitle: string) => {
     try {
+      console.log('Attempting delete', url, 'adminTokenPresent=', !!localStorage.getItem('adminToken'));
       const res = await apiRequest('DELETE', url);
+      console.log('Delete response', res.status, await (async () => { try { return await res.clone().text(); } catch { return ''; } })());
       // try to parse JSON response if any
       try { await res.json(); } catch {}
       toast({ title: successTitle });
@@ -101,8 +103,27 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
     } catch (e) {
       const errMsg = (e as Error)?.message ?? 'Delete failed';
+      console.error('Delete failed', url, e);
       toast({ title: 'Delete failed', description: errMsg, variant: 'destructive' });
     }
+  };
+
+  const handleCopy = async (text: string, label = 'Copied') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({ title: label });
+    } catch (err) {
+      toast({ title: 'Copy failed', description: String(err), variant: 'destructive' });
+    }
+  };
+
+  const copyAllPhones = async (members: (Participant | any)[]) => {
+    const phones = members.map(m => m.phone).filter(Boolean).join('\n');
+    if (!phones) {
+      toast({ title: 'No phone numbers available' });
+      return;
+    }
+    await handleCopy(phones, 'Copied phone numbers');
   };
 
   return (
