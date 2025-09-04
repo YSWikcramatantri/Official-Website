@@ -31,12 +31,19 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...getAuthHeaders(),
   };
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const target = url.toString().startsWith("http") ? url.toString() : `${typeof window !== 'undefined' ? window.location.origin : ''}${url}`;
+  let res: Response;
+  try {
+    res = await fetch(target, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("apiRequest fetch failed:", { method, target, headers, data, error: err });
+    throw err;
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -48,7 +55,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const rel = queryKey.join("/") as string;
+    const target = rel.startsWith("http") ? rel : `${typeof window !== 'undefined' ? window.location.origin : ''}${rel}`;
+    const res = await fetch(target, {
       credentials: "include",
       headers: getAuthHeaders(),
     });
