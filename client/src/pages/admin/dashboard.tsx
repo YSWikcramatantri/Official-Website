@@ -163,18 +163,22 @@ export default function AdminDashboard() {
                       <TableRow key={s.id}>
                         <TableCell className="align-top">{s.name}</TableCell>
                         <TableCell>
-                          {(s.members ?? []).map(m => (
-                            <div key={m.id} className="mb-2">
-                              <div className="font-medium">{m.name} {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>
-                              <div className="text-sm text-muted-foreground">{m.subject} • {m.email ?? "—"} • {m.phone ?? "—"}</div>
-                            </div>
-                          ))}
+                          <div>
+                            {(s.members ?? []).map(m => (
+                              <div key={m.id} className="mb-2">
+                                <div className="font-medium">{m.name} {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>
+                                <div className="text-sm text-muted-foreground">{m.subject} • {m.email ?? "—"} • {m.phone ?? "—"} • <span className="font-mono">{m.passcode}</span></div>
+                              </div>
+                            ))}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center">
                             <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this school? This will remove the school record.')) return; await handleDeleteResource(`/api/admin/schools/${s.id}`, 'School deleted'); }}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
+                            <Button size="sm" onClick={() => copyAllPhones(s.members)}>Copy phones</Button>
+                            <Button size="sm" onClick={() => handleCopy((s.members ?? []).map((m:any)=>m.passcode).filter(Boolean).join('\n'), 'Copied passcodes')}>Copy passcodes</Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -192,7 +196,9 @@ export default function AdminDashboard() {
                         <TableCell>{p.subject ?? 'Solo'}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{p.email ?? '—'} • {p.phone ?? '—'}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 items-center">
+                            <div className="font-mono text-sm">{p.passcode}</div>
+                            <Button size="sm" onClick={() => handleCopy(p.passcode ?? '', 'Copied passcode')}>Copy</Button>
                             <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this participant?')) return; await handleDeleteResource(`/api/admin/participants/${p.id}`, 'Participant deleted'); }}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
