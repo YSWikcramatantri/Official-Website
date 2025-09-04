@@ -32,10 +32,10 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...getAuthHeaders(),
   };
-  // Build absolute URL in the browser to ensure requests go to the same origin as the page
+  // In the browser prefer relative URLs (avoid building absolute URLs) so the request stays same-origin and avoids CORS issues
   const target = typeof window === 'undefined'
     ? (url.toString().startsWith('http') ? url.toString() : `${process.env.SERVER_ORIGIN || ''}${url}`)
-    : (url.toString().startsWith('http') ? url.toString() : `${window.location.origin}${url}`);
+    : (url.toString().startsWith('http') ? url.toString() : (url.toString().startsWith('/') ? url : `${window.location.pathname.replace(/\/.*/,'')}${url}`));
 
   let res: Response;
   try {
