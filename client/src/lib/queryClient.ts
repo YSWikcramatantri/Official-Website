@@ -31,10 +31,11 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
     ...getAuthHeaders(),
   };
-  const target = url.toString().startsWith("http") ? url.toString() : `${typeof window !== 'undefined' ? window.location.origin : ''}${url}`;
+  // Use relative URLs in the browser to avoid CORS issues; only build absolute URLs when not in browser
+  const target = typeof window === 'undefined' ? (url.toString().startsWith('http') ? url.toString() : `${process.env.SERVER_ORIGIN || ''}${url}`) : url;
   let res: Response;
   try {
-    res = await fetch(target, {
+    res = await fetch(target as string, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
@@ -56,8 +57,8 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const rel = queryKey.join("/") as string;
-    const target = rel.startsWith("http") ? rel : `${typeof window !== 'undefined' ? window.location.origin : ''}${rel}`;
-    const res = await fetch(target, {
+    const target = typeof window === 'undefined' ? (rel.startsWith('http') ? rel : `${process.env.SERVER_ORIGIN || ''}${rel}`) : rel;
+    const res = await fetch(target as string, {
       credentials: "include",
       headers: getAuthHeaders(),
     });
