@@ -221,7 +221,7 @@ export default function AdminDashboard() {
               </TabsList>
               <TabsContent value="schools">
                 <Table>
-                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Members</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Team</TableHead><TableHead>Members</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {schools.map(s => (
                       <TableRow key={s.id}>
