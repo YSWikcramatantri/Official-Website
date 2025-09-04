@@ -143,18 +143,49 @@ export default function Home() {
             {/* Solo Registration */}
             <TabsContent value="solo">
               <Card>
-                <CardHeader><CardTitle>Solo Passcode</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Solo Registration</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Button onClick={async () => {
-                    try {
-                      const res = await apiRequest("POST", "/api/participants/solo-passcode");
-                      const data = await res.json();
-                      setGeneratedPasscodes([{ name: data.participant.name, passcode: data.passcode, subject: "" }]);
-                      toast({ title: "Passcode Generated" });
-                    } catch (e: any) {
-                      toast({ title: "Failed to generate", description: e.message, variant: "destructive" });
-                    }
-                  }} className="w-full">Generate Solo Passcode</Button>
+                  <Form {...soloForm}>
+                    <form onSubmit={soloForm.handleSubmit(
+                      (data) => soloRegisterMutation.mutate(data),
+                      () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
+                    )} className="space-y-4">
+                      <FormField control={soloForm.control} name="name" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={soloForm.control} name="institution" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>School / Institution</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={soloForm.control} name="email" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl><Input type="email" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <FormField control={soloForm.control} name="phone" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+
+                      <Button type="submit" className="w-full" disabled={soloRegisterMutation.isPending}>{soloRegisterMutation.isPending ? "Registering..." : "Register & Get Passcode"}</Button>
+                    </form>
+                  </Form>
+
                   {generatedPasscodes.length > 0 && (
                     <div className="p-4 border rounded">
                       <div className="font-mono text-lg flex justify-between"><span>Passcode:</span><span>{generatedPasscodes[0].passcode}</span></div>
