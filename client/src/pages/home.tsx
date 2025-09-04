@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertParticipantSchema } from "@shared/schema";
-import type { SystemSettings } from "@shared/schema";
+import type { SystemSettings, Participant } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ export default function Home() {
   const [, setLocation] = useLocation();
   const [generatedPasscodes, setGeneratedPasscodes] = useState<GeneratedPasscode[]>([]);
   const [registeredSchool, setRegisteredSchool] = useState<{ name: string; team: string } | null>(null);
+  const [soloParticipant, setSoloParticipant] = useState<Participant | null>(null);
   const { toast } = useToast();
 
   const { data: settings } = useQuery<Partial<SystemSettings>>({ queryKey: ['/api/settings'] });
@@ -88,6 +89,7 @@ export default function Home() {
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
       const p = (data.newParticipants && data.newParticipants[0]) || null;
+      setSoloParticipant(p ?? null);
       const pass = p?.passcode ?? '';
       toast({ title: 'Registration Complete', description: pass ? `Your passcode: ${pass}. Keep it safe.` : 'Registration complete.' });
       soloForm.reset();
@@ -243,7 +245,41 @@ export default function Home() {
             </TabsContent>
 
             {/* Passcode Display */}
-            {generatedPasscodes.length > 0 && (
+            {generatedPasscodes.length > 0 && soloParticipant && (
+              <Card className="mt-6">
+                <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Solo Registration Complete</CardTitle></CardHeader>
+                <CardContent>
+                  <p className="mb-3">Here are your registration details — please save your passcode to access the quiz.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <div className="text-sm text-muted-foreground">Name</div>
+                      <div className="font-medium">{soloParticipant.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">School / Institution</div>
+                      <div className="font-medium">{soloParticipant.institution ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Email</div>
+                      <div className="font-medium">{soloParticipant.email ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Phone</div>
+                      <div className="font-medium">{soloParticipant.phone ?? '—'}</div>
+                    </div>
+                  </div>
+
+                  <div className="my-4 p-4 border rounded-md flex items-center justify-between">
+                    <div className="font-mono">{generatedPasscodes[0].passcode}</div>
+                    <div>
+                      <Button className="mr-2" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {generatedPasscodes.length > 0 && !soloParticipant && (
               <Card className="mt-6">
                 <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Registration Successful!</CardTitle></CardHeader>
                 <CardContent>
