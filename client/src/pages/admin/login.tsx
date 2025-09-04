@@ -67,8 +67,8 @@ export default function AdminLogin() {
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <Shield className="text-4xl text-primary mb-4 mx-auto" size={48} />
-            <h2 className="text-2xl font-bold text-gray-800">Admin Access</h2>
-            <p className="text-gray-600">Enter password to continue</p>
+            <h2 className="text-2xl font-bold" style={{ color: "rgba(163, 175, 192, 1)" }}>Admin Access</h2>
+            <p style={{ color: "rgba(119, 120, 124, 1)" }}>Enter password to continue</p>
           </div>
 
           <Form {...form}>
