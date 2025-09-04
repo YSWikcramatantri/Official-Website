@@ -132,7 +132,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSchool(id: string): Promise<boolean> {
-    const result = await db.delete(schools).where(eq(schools.id, id));
+    // Remove participants associated with the school, then remove the school in a transaction
+    const result = await db.transaction(async (tx) => {
+      await tx.delete(participants).where(eq(participants.schoolId, id));
+      const r = await tx.delete(schools).where(eq(schools.id, id));
+      return r;
+    });
     return result.rowCount > 0;
   }
 
