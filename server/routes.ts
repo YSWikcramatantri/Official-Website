@@ -312,6 +312,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a participant (admin)
+  app.delete("/api/admin/participants/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteParticipant(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: "Participant not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete participant" });
+    }
+  });
+
+  // Delete a school (admin)
+  app.delete("/api/admin/schools/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteSchool(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: "School not found" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete school" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
