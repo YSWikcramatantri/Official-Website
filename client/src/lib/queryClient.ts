@@ -2,8 +2,23 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const copy = res.clone();
+      let message = await copy.text();
+      if (!message) message = res.statusText;
+      throw new Error(`${res.status}: ${message}`);
+    } catch {
+      throw new Error(`${res.status}: ${res.statusText}`);
+    }
+  }
+}
+
+function getAuthHeaders() {
+  try {
+    const token = localStorage.getItem("adminToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
   }
 }
 
@@ -12,12 +27,28 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(data ? { "Content-Type": "application/json" } : {}),
+    ...getAuthHeaders(),
+  };
+  // In the browser prefer relative URLs (avoid building absolute URLs) so the request stays same-origin and avoids CORS issues
+  const target = typeof window === 'undefined'
+    ? (url.toString().startsWith('http') ? url.toString() : `${process.env.SERVER_ORIGIN || ''}${url}`)
+    : (url.toString().startsWith('http') ? url.toString() : (url.toString().startsWith('/') ? url : `${window.location.pathname.replace(/\/.*/,'')}${url}`));
+
+  let res: Response;
+  try {
+    res = await fetch(target as string, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+  } catch (err) {
+    console.error("apiRequest fetch failed:", { method, target, headers, data, error: err });
+    throw err;
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -29,8 +60,11 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const rel = queryKey.join("/") as string;
+    const target = typeof window === 'undefined' ? (rel.startsWith('http') ? rel : `${process.env.SERVER_ORIGIN || ''}${rel}`) : rel;
+    const res = await fetch(target as string, {
       credentials: "include",
+      headers: getAuthHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

@@ -12,6 +12,7 @@ declare module 'express-session' {
 }
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -25,11 +26,29 @@ app.use(session({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
   cookie: {
-    secure: false, // set to true in production with HTTPS
+    secure: true,
+    sameSite: 'none',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
+
+// CORS and preflight handling to support API requests with credentials and Authorization header
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin as string);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Headers', 'Authorization,Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Vary', 'Origin');
+  } else {
+    // fallback for same-origin or server-side
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -68,8 +87,8 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    console.error("Unhandled error:", err);
+    if (!res.headersSent) res.status(status).json({ message });
   });
 
   // importantly only setup vite in development and after

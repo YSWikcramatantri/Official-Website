@@ -87,8 +87,13 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState)
         }
 
-        // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        // This sets the cookie to keep the sidebar state. Guard in case the page is sandboxed (e.g., Builder iframe)
+        try {
+          document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+        } catch (err) {
+          // ignore cookie write failures in sandboxed contexts
+          console.debug('Could not write sidebar cookie:', err);
+        }
       },
       [setOpenProp, open]
     )

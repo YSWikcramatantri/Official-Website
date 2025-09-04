@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,11 +33,19 @@ export default function AdminLogin() {
       const response = await apiRequest("POST", "/api/admin/login", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      try {
+        if (data?.token) localStorage.setItem("adminToken", data.token);
+      } catch {}
       toast({
         title: "Login Successful",
         description: "Welcome to the admin dashboard",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/settings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/participants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/schools"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/quiz-submissions"] });
       setLocation('/admin/dashboard');
     },
     onError: (error) => {
@@ -58,8 +67,8 @@ export default function AdminLogin() {
         <CardContent className="p-8">
           <div className="text-center mb-8">
             <Shield className="text-4xl text-primary mb-4 mx-auto" size={48} />
-            <h2 className="text-2xl font-bold text-gray-800">Admin Access</h2>
-            <p className="text-gray-600">Enter password to continue</p>
+            <h2 className="text-2xl font-bold" style={{ color: "rgba(163, 175, 192, 1)" }}>Admin Access</h2>
+            <p style={{ color: "rgba(119, 120, 124, 1)" }}>Enter password to continue</p>
           </div>
 
           <Form {...form}>

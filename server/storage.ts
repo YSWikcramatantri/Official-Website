@@ -37,7 +37,7 @@ export interface IStorage {
   createSchool(school: InsertSchool): Promise<School>;
   getAllSchools(): Promise<School[]>;
   deleteSchool(id: string): Promise<boolean>;
-  registerSchoolWithMembers(schoolName: string, members: MemberInfo[]): Promise<{ school: School, newParticipants: Participant[] }>;
+  registerSchoolWithMembers(schoolName: string, members: MemberInfo[], team?: string): Promise<{ school: School, newParticipants: Participant[] }>;
 
   // Questions
   getQuestion(id: string): Promise<Question | undefined>;
@@ -88,7 +88,10 @@ export class DatabaseStorage implements IStorage {
     const [participant] = await db
       .insert(participants)
       .values({
-        ...insertParticipant,
+        name: (insertParticipant as any).name ?? `Participant ${passcode}`,
+        email: (insertParticipant as any).email ?? null,
+        phone: (insertParticipant as any).phone ?? null,
+        institution: (insertParticipant as any).institution ?? null,
         passcode,
         mode,
         schoolId,
@@ -129,15 +132,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSchool(id: string): Promise<boolean> {
-    const result = await db.delete(schools).where(eq(schools.id, id));
+    // Remove participants associated with the school, then remove the school in a transaction
+    const result = await db.transaction(async (tx) => {
+      await tx.delete(participants).where(eq(participants.schoolId, id));
+      const r = await tx.delete(schools).where(eq(schools.id, id));
+      return r;
+    });
     return result.rowCount > 0;
   }
 
-  async registerSchoolWithMembers(schoolName: string, members: MemberInfo[]): Promise<{ school: School, newParticipants: Participant[] }> {
+  async registerSchoolWithMembers(schoolName: string, members: MemberInfo[], team = "A"): Promise<{ school: School, newParticipants: Participant[] }> {
     return db.transaction(async (tx) => {
-      const [school] = await tx.insert(schools).values({ name: schoolName }).returning();
+      const [school] = await tx.insert(schools).values({ name: schoolName, team }).returning();
 
-      const newParticipants = [];
+      const newParticipants: Participant[] = [];
       for (const member of members) {
         let passcode: string;
         do {
@@ -146,8 +154,8 @@ export class DatabaseStorage implements IStorage {
 
         const [p] = await tx.insert(participants).values({
           name: member.name,
-          email: member.email,
-          phone: member.phone,
+          email: (member as any).email ?? null,
+          phone: (member as any).phone ?? null,
           passcode,
           mode: 'school',
           schoolId: school.id,
@@ -209,12 +217,35 @@ export class DatabaseStorage implements IStorage {
   // System Settings
   async getSystemSettings(): Promise<SystemSettings> {
     const result = await db.select().from(systemSettings).where(eq(systemSettings.id, "system"));
-    return result[0];
+    if (result[0]) return result[0];
+
+    const defaults: Partial<SystemSettings> = {
+      id: "system",
+      soloRegistrationOpen: true,
+      schoolRegistrationOpen: true,
+      quizActive: false,
+    } as any;
+
+    const inserted = await db
+      .insert(systemSettings)
+      .values(defaults as any)
+      .onConflictDoNothing()
+      .returning();
+
+    if (inserted[0]) return inserted[0] as SystemSettings;
+
+    const [row] = await db.select().from(systemSettings).where(eq(systemSettings.id, "system"));
+    return row as SystemSettings;
   }
 
   async updateSystemSettings(settings: UpdateSystemSettings): Promise<SystemSettings> {
-    const [updated] = await db.update(systemSettings).set(settings).where(eq(systemSettings.id, "system")).returning();
-    return updated;
+    await this.getSystemSettings();
+    const [updated] = await db
+      .update(systemSettings)
+      .set(settings as any)
+      .where(eq(systemSettings.id, "system"))
+      .returning();
+    return updated as SystemSettings;
   }
 }
 

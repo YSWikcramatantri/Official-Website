@@ -4,7 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertParticipantSchema } from "@shared/schema";
-import type { InsertParticipant, SystemSettings } from "@shared/schema";
+import type { SystemSettings } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,18 @@ const passcodeSchema = z.object({
 
 const schoolRegistrationSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
-  members: z.array(insertParticipantSchema.extend({
-    subject: z.enum(SUBJECTS as [string, ...string[]]),
-    isLeader: z.boolean(),
-  })).length(5),
+  team: z.enum(["A", "B"]).default("A"),
+  members: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().min(1),
+        phone: z.string().min(1),
+        subject: z.enum(SUBJECTS as [string, ...string[]]),
+        isLeader: z.boolean(),
+      }),
+    )
+    .length(5, "5 members are required"),
 });
 
 type SchoolRegistration = z.infer<typeof schoolRegistrationSchema>;
@@ -41,8 +49,15 @@ export default function Home() {
 
   const { data: settings } = useQuery<Partial<SystemSettings>>({ queryKey: ['/api/settings'] });
 
-  const soloForm = useForm<InsertParticipant>({
-    resolver: zodResolver(insertParticipantSchema),
+  const soloForm = useForm<{ name: string; email: string; phone: string; institution?: string }>({
+    resolver: zodResolver(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        phone: z.string().min(1),
+        institution: z.string().optional(),
+      }),
+    ),
     defaultValues: { name: "", email: "", phone: "" },
   });
 
@@ -50,6 +65,7 @@ export default function Home() {
     resolver: zodResolver(schoolRegistrationSchema),
     defaultValues: {
       schoolName: "",
+      team: "A",
       members: SUBJECTS.map(subject => ({
         name: "",
         email: "",
@@ -67,7 +83,7 @@ export default function Home() {
   });
 
   const soloRegisterMutation = useMutation({
-    mutationFn: (data: InsertParticipant) => apiRequest("POST", "/api/participants", data).then(res => res.json()),
+    mutationFn: (data: { name: string; email: string; phone: string; institution?: string }) => apiRequest("POST", "/api/participants", data).then(res => res.json()),
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
       toast({ title: "Registration Successful!" });
@@ -124,7 +140,27 @@ export default function Home() {
 
             {/* Solo Registration */}
             <TabsContent value="solo">
-              {/* ... solo registration form ... */}
+              <Card>
+                <CardHeader><CardTitle>Solo Passcode</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <Button onClick={async () => {
+                    try {
+                      const res = await apiRequest("POST", "/api/participants/solo-passcode");
+                      const data = await res.json();
+                      setGeneratedPasscodes([{ name: data.participant.name, passcode: data.passcode, subject: "" }]);
+                      toast({ title: "Passcode Generated" });
+                    } catch (e: any) {
+                      toast({ title: "Failed to generate", description: e.message, variant: "destructive" });
+                    }
+                  }} className="w-full">Generate Solo Passcode</Button>
+                  {generatedPasscodes.length > 0 && (
+                    <div className="p-4 border rounded">
+                      <div className="font-mono text-lg flex justify-between"><span>Passcode:</span><span>{generatedPasscodes[0].passcode}</span></div>
+                      <Button className="mt-3" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* School Registration */}
@@ -133,8 +169,19 @@ export default function Home() {
                 <CardHeader><CardTitle>School Team Registration</CardTitle></CardHeader>
                 <CardContent>
                   <Form {...schoolForm}>
-                    <form onSubmit={schoolForm.handleSubmit(data => schoolRegisterMutation.mutate(data))} className="space-y-6">
+                    <form onSubmit={schoolForm.handleSubmit(
+                      (data) => schoolRegisterMutation.mutate(data),
+                      () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
+                    )} className="space-y-6">
                       <FormField control={schoolForm.control} name="schoolName" render={({ field }) => (<FormItem><FormLabel>School Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+
+                      <div className="mb-2">
+                        <FormLabel>Team</FormLabel>
+                        <RadioGroup defaultValue="A" onValueChange={(v) => schoolForm.setValue('team', v as any)} className="flex gap-6 mt-2">
+                          <div className="flex items-center gap-2"><RadioGroupItem value="A" id="teamA" /><label htmlFor="teamA">Team A</label></div>
+                          <div className="flex items-center gap-2"><RadioGroupItem value="B" id="teamB" /><label htmlFor="teamB">Team B</label></div>
+                        </RadioGroup>
+                      </div>
 
                       <RadioGroup onValueChange={(value) => schoolForm.setValue('members', schoolForm.getValues('members').map((m, i) => ({...m, isLeader: i === parseInt(value)})))}>
                         {fields.map((field, index) => (
