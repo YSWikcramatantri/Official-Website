@@ -102,6 +102,7 @@ export default function Home() {
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
       setRegisteredSchool({ name: data.school?.name ?? '', team: data.school?.team ?? 'A' });
+      setSoloParticipant(null);
       toast({ title: "School Registration Successful!" });
       schoolForm.reset();
     },
