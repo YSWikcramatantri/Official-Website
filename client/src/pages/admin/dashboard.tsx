@@ -226,6 +226,7 @@ export default function AdminDashboard() {
                     {schools.map(s => (
                       <TableRow key={s.id}>
                         <TableCell className="align-top">{s.name}</TableCell>
+                        <TableCell className="align-top">{s.team ?? 'A'}</TableCell>
                         <TableCell>
                           <div>
                             {(s.members ?? []).map(m => (
