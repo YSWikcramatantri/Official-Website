@@ -136,19 +136,31 @@ export default function AdminDashboard() {
           </TabsContent>
           <TabsContent value="registrations" className="mt-4">
             <Tabs defaultValue="schools">
-              <TabsList>
-                <TabsTrigger value="schools">Schools</TabsTrigger>
-                <TabsTrigger value="solo">Solo Participants</TabsTrigger>
+              <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                <TabsTrigger value="schools" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Schools</TabsTrigger>
+                <TabsTrigger value="solo" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Solo Participants</TabsTrigger>
               </TabsList>
               <TabsContent value="schools">
                 <Table>
-                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Members</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Members</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {schools.map(s => (
                       <TableRow key={s.id}>
-                        <TableCell>{s.name}</TableCell>
+                        <TableCell className="align-top">{s.name}</TableCell>
                         <TableCell>
-                          {(s.members ?? []).map(m => <div key={m.id}>{m.name} ({m.subject}) {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>)}
+                          {(s.members ?? []).map(m => (
+                            <div key={m.id} className="mb-2">
+                              <div className="font-medium">{m.name} {m.isLeader && <Star className="inline w-4 h-4 text-yellow-500" />}</div>
+                              <div className="text-sm text-muted-foreground">{m.subject} • {m.email ?? "—"} • {m.phone ?? "—"}</div>
+                            </div>
+                          ))}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this school? This will remove the school record.')) return; try { await apiRequest('DELETE', `/api/admin/schools/${s.id}`); toast({ title: 'School deleted' }); queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] }); queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] }); } catch (e) { toast({ title: 'Delete failed', description: (e as Error).message, variant: 'destructive' }); } }}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -156,7 +168,25 @@ export default function AdminDashboard() {
                 </Table>
               </TabsContent>
               <TabsContent value="solo">
-                {/* Solo participants table */}
+                <Table>
+                  <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Subject</TableHead><TableHead>Contact</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {(participants ?? []).filter(p => p.mode === 'solo').map(p => (
+                      <TableRow key={p.id}>
+                        <TableCell>{p.name}</TableCell>
+                        <TableCell>{p.subject ?? 'Solo'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{p.email ?? '—'} • {p.phone ?? '—'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this participant?')) return; try { await apiRequest('DELETE', `/api/admin/participants/${p.id}`); toast({ title: 'Participant deleted' }); queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] }); queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] }); } catch (e) { toast({ title: 'Delete failed', description: (e as Error).message, variant: 'destructive' }); } }}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </TabsContent>
             </Tabs>
           </TabsContent>
