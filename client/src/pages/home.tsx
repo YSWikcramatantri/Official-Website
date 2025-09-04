@@ -87,7 +87,9 @@ export default function Home() {
     mutationFn: (data: { name: string; email: string; phone: string; institution?: string }) => apiRequest("POST", "/api/participants", data).then(res => res.json()),
     onSuccess: (data) => {
       setGeneratedPasscodes(data.newParticipants);
-      toast({ title: "Registration Successful!" });
+      const p = (data.newParticipants && data.newParticipants[0]) || null;
+      const pass = p?.passcode ?? '';
+      toast({ title: 'Registration Complete', description: pass ? `Your passcode: ${pass}. Keep it safe.` : 'Registration complete.' });
       soloForm.reset();
     },
     onError: (error: any) => toast({ title: "Registration Failed", description: error.message, variant: "destructive" }),
