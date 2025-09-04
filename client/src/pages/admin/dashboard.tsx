@@ -109,12 +109,36 @@ export default function AdminDashboard() {
   };
 
   const handleCopy = async (text: string, label = 'Copied') => {
+    // Try Clipboard API first
     try {
-      await navigator.clipboard.writeText(text);
-      toast({ title: label });
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast({ title: label });
+        return;
+      }
     } catch (err) {
-      toast({ title: 'Copy failed', description: String(err), variant: 'destructive' });
+      console.debug('Clipboard API failed or blocked:', err);
     }
+
+    // Fallback: trigger a file download so user can open and copy manually
+    try {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'data.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast({ title: 'Downloaded', description: 'File downloaded — open it to copy the content' });
+      return;
+    } catch (err) {
+      console.debug('Download fallback failed:', err);
+    }
+
+    // Last resort: instruct user
+    toast({ title: 'Copy failed', description: 'Clipboard access blocked by the browser or iframe. Open this page in a new tab to copy.', variant: 'destructive' });
   };
 
   const copyAllPhones = async (members: (Participant | any)[]) => {
