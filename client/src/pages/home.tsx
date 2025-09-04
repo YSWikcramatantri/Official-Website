@@ -140,9 +140,9 @@ export default function Home() {
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="participate" className="w-full">
-            <TabsList className={`grid w-full grid-cols-${registrationTabs.length > 0 ? registrationTabs.length + 1 : 1}`}>
-              {registrationTabs.map(tab => <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-2"><tab.icon className="h-4 w-4" />{tab.label}</TabsTrigger>)}
-              <TabsTrigger value="participate" className="flex items-center gap-2"><Key className="h-4 w-4" />Participate</TabsTrigger>
+            <TabsList className="w-full justify-start gap-2">
+              {registrationTabs.map(tab => <TabsTrigger key={tab.value} value={tab.value} className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))] flex items-center gap-2"><tab.icon className="h-4 w-4" />{tab.label}</TabsTrigger>)}
+              <TabsTrigger value="participate" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))] flex items-center gap-2"><Key className="h-4 w-4" />Participate</TabsTrigger>
             </TabsList>
 
             {/* Solo Registration */}
