@@ -90,6 +90,21 @@ export default function AdminDashboard() {
     );
   }
 
+  // helper to delete resources
+  const handleDeleteResource = async (url: string, successTitle: string) => {
+    try {
+      const res = await apiRequest('DELETE', url);
+      // try to parse JSON response if any
+      try { await res.json(); } catch {}
+      toast({ title: successTitle });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+    } catch (e) {
+      const errMsg = (e as Error)?.message ?? 'Delete failed';
+      toast({ title: 'Delete failed', description: errMsg, variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
       <header className="bg-[hsl(var(--card))] shadow-sm sticky top-0 z-10">
@@ -157,7 +172,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this school? This will remove the school record.')) return; try { await apiRequest('DELETE', `/api/admin/schools/${s.id}`); toast({ title: 'School deleted' }); queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] }); queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] }); } catch (e) { toast({ title: 'Delete failed', description: (e as Error).message, variant: 'destructive' }); } }}>
+                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this school? This will remove the school record.')) return; await handleDeleteResource(`/api/admin/schools/${s.id}`, 'School deleted'); }}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -178,7 +193,7 @@ export default function AdminDashboard() {
                         <TableCell className="text-sm text-muted-foreground">{p.email ?? '—'} • {p.phone ?? '—'}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this participant?')) return; try { await apiRequest('DELETE', `/api/admin/participants/${p.id}`); toast({ title: 'Participant deleted' }); queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] }); queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] }); } catch (e) { toast({ title: 'Delete failed', description: (e as Error).message, variant: 'destructive' }); } }}>
+                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this participant?')) return; await handleDeleteResource(`/api/admin/participants/${p.id}`, 'Participant deleted'); }}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
