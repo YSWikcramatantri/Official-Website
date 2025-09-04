@@ -376,6 +376,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fallback POST endpoints for environments that block DELETE requests (e.g., adblockers)
+  app.post("/api/admin/participants/delete", async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log("POST delete participant request for id:", id);
+      if (!id) return res.status(400).json({ message: "Missing participant id" });
+      const deleted = await storage.deleteParticipant(id);
+      console.log("POST delete participant result:", deleted);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: "Participant not found" });
+    } catch (error) {
+      console.error("Failed to delete participant via POST:", error);
+      res.status(500).json({ message: "Failed to delete participant" });
+    }
+  });
+
+  app.post("/api/admin/schools/delete", async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log("POST delete school request for id:", id);
+      if (!id) return res.status(400).json({ message: "Missing school id" });
+      const deleted = await storage.deleteSchool(id);
+      console.log("POST delete school result:", deleted);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: "School not found" });
+    } catch (error) {
+      console.error("Failed to delete school via POST:", error);
+      res.status(500).json({ message: "Failed to delete school" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
