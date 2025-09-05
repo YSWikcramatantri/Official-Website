@@ -292,12 +292,12 @@ export default function Home() {
 
             {/* Participate Tab */}
             <TabsContent value="participate">
-              <Card>
-                <CardHeader><CardTitle>Participate</CardTitle></CardHeader>
-                <CardContent>
+              <Card className="mx-auto w-full max-w-2xl">
+                <CardHeader><CardTitle className="text-center">Participate</CardTitle></CardHeader>
+                <CardContent className="flex justify-center">
                   {settings?.quizActive ? (
                     <Form {...passcodeForm}>
-                      <form onSubmit={passcodeForm.handleSubmit((d) => verifyPasscodeMutation.mutate(d))} className="space-y-4 max-w-md">
+                      <form onSubmit={passcodeForm.handleSubmit((d) => verifyPasscodeMutation.mutate(d))} className="space-y-4 max-w-md w-full">
                         <FormField control={passcodeForm.control} name="passcode" render={({ field }) => (
                           <FormItem>
                             <FormLabel>Enter your passcode</FormLabel>
