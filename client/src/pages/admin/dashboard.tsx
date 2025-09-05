@@ -284,7 +284,57 @@ export default function AdminDashboard() {
             </Tabs>
           </TabsContent>
           <TabsContent value="questions">
-            {/* Questions management */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Questions</h3>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => { setEditingQuestion(null); setIsQuestionModalOpen(true); }}>Add Question</Button>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Text</TableHead>
+                    <TableHead>Mode</TableHead>
+                    <TableHead>Time (s)</TableHead>
+                    <TableHead>Marks</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {questions.map(q => (
+                    <TableRow key={q.id}>
+                      <TableCell>{q.orderIndex}</TableCell>
+                      <TableCell className="max-w-xl truncate">{q.text}</TableCell>
+                      <TableCell>{(q as any).mode ?? 'both'}</TableCell>
+                      <TableCell>{q.timeLimit}</TableCell>
+                      <TableCell>{q.marks}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 items-center">
+                          <Button size="sm" onClick={() => { setEditingQuestion(q); setIsQuestionModalOpen(true); }}>Edit</Button>
+                          <Button variant="destructive" size="sm" onClick={async () => {
+                            if (!confirm('Delete this question?')) return;
+                            try {
+                              await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
+                              queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+                              toast({ title: 'Question deleted' });
+                            } catch (e: any) {
+                              toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
+                            }
+                          }}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            <QuestionFormModal isOpen={isQuestionModalOpen} onClose={() => { setIsQuestionModalOpen(false); setEditingQuestion(null); }} question={editingQuestion} />
           </TabsContent>
         </Tabs>
       </main>
