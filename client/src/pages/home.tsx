@@ -308,7 +308,7 @@ export default function Home() {
                           </FormItem>
                         )} />
 
-                        <Button type="submit" className="w-full" disabled={verifyPasscodeMutation.isPending}>{verifyPasscodeMutation.isPending ? 'Verifying...' : 'Enter Quiz'}</Button>
+                        <Button type="submit" className="w-full" disabled={verifyPasscodeMutation.isPending}>{verifyPasscodeMutation.isPending ? 'Verifying...' : 'Start quiz'}</Button>
                       </form>
                     </Form>
                   ) : (
