@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, LogOut, Users, User, Trophy, Trash2, Home, Star } from "lucide-react";
-import type { Participant, School, SystemSettings } from "@shared/schema";
+import type { Participant, School, SystemSettings, Question } from "@shared/schema";
 
 interface SchoolWithMembers extends School {
   members: Participant[];
