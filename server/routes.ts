@@ -167,9 +167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get quiz questions (public fetch; client controls access via passcode verification)
-  app.get("/api/questions", async (_req, res) => {
+  app.get("/api/questions", async (req, res) => {
     try {
-      const qs = await storage.getAllQuestions();
+      const mode = (req.query?.mode as string) || null; // 'solo' | 'team' | null
+      let qs = await storage.getAllQuestions();
+      if (mode === 'solo' || mode === 'team') {
+        qs = qs.filter(q => (q as any).mode === mode || (q as any).mode === 'both');
+      }
       res.json(qs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch questions" });
