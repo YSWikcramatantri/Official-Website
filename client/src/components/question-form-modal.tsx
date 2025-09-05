@@ -39,7 +39,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
       correctAnswer: "A",
       timeLimit: 60,
       marks: 5,
-      orderIndex: 1
+      orderIndex: 1,
+      mode: 'both'
     }
   });
 
