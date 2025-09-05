@@ -31,6 +31,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
   const { toast } = useToast();
   const isEditing = !!question;
 
+  const SUBJECTS = ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"];
+
   const form = useForm<InsertQuestion>({
     resolver: zodResolver(insertQuestionSchema),
     defaultValues: {
@@ -40,7 +42,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
       timeLimit: 60,
       marks: 5,
       orderIndex: 1,
-      mode: 'both'
+      mode: 'both',
+      subject: ''
     }
   });
 
@@ -54,7 +57,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         timeLimit: question.timeLimit,
         marks: question.marks,
         orderIndex: question.orderIndex,
-        mode: (question as any).mode ?? 'both'
+        mode: (question as any).mode ?? 'both',
+        subject: (question as any).subject ?? ''
       });
     } else {
       form.reset({
@@ -64,10 +68,12 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         timeLimit: 60,
         marks: 5,
         orderIndex: 1,
-        mode: 'both'
+        mode: 'both',
+        subject: ''
       });
     }
   }, [question, form]);
+
 
   const createQuestionMutation = useMutation({
     mutationFn: async (data: InsertQuestion) => {
@@ -283,6 +289,25 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
                       <span>Both</span>
                     </label>
                   </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="subject" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject (optional)</FormLabel>
+                <FormControl>
+                  <select
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="">-- Select subject --</option>
+                    {SUBJECTS.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

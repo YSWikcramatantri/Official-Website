@@ -58,9 +58,11 @@ async function run() {
     time_limit integer NOT NULL,
     marks integer NOT NULL,
     order_index integer NOT NULL,
-    mode text DEFAULT 'both'
+    mode text DEFAULT 'both',
+    subject text
   );`);
   await safeExec(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS mode text DEFAULT 'both';`);
+  await safeExec(`ALTER TABLE questions ADD COLUMN IF NOT EXISTS subject text;`);
 
   // Quiz submissions
   await safeExec(`CREATE TABLE IF NOT EXISTS quiz_submissions (

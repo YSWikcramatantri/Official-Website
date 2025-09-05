@@ -35,11 +35,16 @@ export default function Quiz() {
   }, [participant.id, setLocation]);
 
   const { data: questions = [], isLoading } = useQuery<QuizQuestion[]>({
-    queryKey: ['/api/questions', participant.mode],
+    queryKey: ['/api/questions', participant.mode, participant.subject],
     enabled: !!participant.id,
     queryFn: async () => {
       const mode = participant.mode;
-      const res = await apiRequest('GET', `/api/questions${mode ? `?mode=${encodeURIComponent(mode)}` : ''}`);
+      const subject = (participant.subject as string) || '';
+      const params = [] as string[];
+      if (mode) params.push(`mode=${encodeURIComponent(mode)}`);
+      if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+      const query = params.length ? `?${params.join('&')}` : '';
+      const res = await apiRequest('GET', `/api/questions${query}`);
       return res.json();
     }
   });

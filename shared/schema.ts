@@ -34,6 +34,7 @@ export const questions = pgTable("questions", {
   marks: integer("marks").notNull(),
   orderIndex: integer("order_index").notNull(),
   mode: text("mode").default("both"), // 'solo' | 'team' | 'both'
+  subject: text("subject"), // optional subject for team questions
 });
 
 export const quizSubmissions = pgTable("quiz_submissions", {
