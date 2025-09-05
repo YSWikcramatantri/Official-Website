@@ -41,9 +41,8 @@ const TabsContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    forceMount
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-opacity transition-transform duration-300 ease-in-out",
+      "mt-0 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-opacity transition-transform duration-300 ease-in-out",
       "data-[state=active]:opacity-100 data-[state=active]:translate-y-0",
       "data-[state=inactive]:opacity-0 data-[state=inactive]:-translate-y-2 data-[state=inactive]:pointer-events-none",
       className
