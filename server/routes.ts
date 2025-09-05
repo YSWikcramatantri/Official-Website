@@ -249,6 +249,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Questions CRUD
+  app.get('/api/admin/questions', async (_req, res) => {
+    try {
+      const qs = await storage.getAllQuestions();
+      res.json(qs);
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to fetch questions' });
+    }
+  });
+
+  app.post('/api/admin/questions', async (req, res) => {
+    try {
+      const parsed = insertQuestionSchema.parse(req.body);
+      const q = await storage.createQuestion(parsed as any);
+      res.json(q);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
+      res.status(500).json({ message: (err as any)?.message || 'Failed to create question' });
+    }
+  });
+
+  app.put('/api/admin/questions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const parsed = insertQuestionSchema.parse(req.body);
+      const updated = await storage.updateQuestion(id, parsed as any);
+      if (!updated) return res.status(404).json({ message: 'Question not found' });
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
+      res.status(500).json({ message: (err as any)?.message || 'Failed to update question' });
+    }
+  });
+
+  app.delete('/api/admin/questions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const deleted = await storage.deleteQuestion(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: 'Question not found' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to delete question' });
+    }
+  });
+
   app.get("/api/admin/stats", async (_req, res) => {
     try {
       const [allParticipants, allSchools, allSubs] = await Promise.all([
