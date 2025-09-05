@@ -264,7 +264,30 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
               </div>
               <p className="text-xs text-gray-500 mt-2">Select the radio button next to the correct answer</p>
             </div>
-            
+
+            <FormField control={form.control} name="mode" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mode</FormLabel>
+                <FormControl>
+                  <div className="flex gap-3">
+                    <label className="inline-flex items-center gap-2">
+                      <input type="radio" name="mode" value="solo" checked={field.value === 'solo'} onChange={() => field.onChange('solo')} />
+                      <span>Solo</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input type="radio" name="mode" value="team" checked={field.value === 'team'} onChange={() => field.onChange('team')} />
+                      <span>Team</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2">
+                      <input type="radio" name="mode" value="both" checked={field.value === 'both'} onChange={() => field.onChange('both')} />
+                      <span>Both</span>
+                    </label>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
