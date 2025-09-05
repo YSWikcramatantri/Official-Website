@@ -302,7 +302,7 @@ export default function Home() {
                           <FormItem>
                             <FormLabel>Enter your passcode</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="XXXXXX" />
+                              <Input {...field} placeholder="XXXXXX" className="text-center font-mono tracking-widest" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
