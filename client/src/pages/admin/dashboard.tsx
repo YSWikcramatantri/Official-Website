@@ -47,6 +47,12 @@ export default function AdminDashboard() {
   const schools = (schoolsQuery.data ?? []).map(s => ({ ...s, members: s.members ?? [] }));
   const submissions = submissionsQuery.data ?? [];
 
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+
+  const questionsQuery = useQuery<Question[] | null>({ queryKey: ["/api/admin/questions"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const questions = questionsQuery.data ?? [];
+
   const updateSettingsMutation = useMutation({
     mutationFn: (data: Partial<SystemSettings>) => apiRequest("PUT", "/api/admin/settings", data),
     onSuccess: () => {
