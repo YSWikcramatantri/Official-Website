@@ -35,8 +35,13 @@ export default function Quiz() {
   }, [participant.id, setLocation]);
 
   const { data: questions = [], isLoading } = useQuery<QuizQuestion[]>({
-    queryKey: ['/api/questions'],
+    queryKey: ['/api/questions', participant.mode],
     enabled: !!participant.id,
+    queryFn: async () => {
+      const mode = participant.mode;
+      const res = await apiRequest('GET', `/api/questions${mode ? `?mode=${encodeURIComponent(mode)}` : ''}`);
+      return res.json();
+    }
   });
 
   const submitQuizMutation = useMutation({
