@@ -33,6 +33,7 @@ export const questions = pgTable("questions", {
   timeLimit: integer("time_limit").notNull(),
   marks: integer("marks").notNull(),
   orderIndex: integer("order_index").notNull(),
+  mode: text("mode").default("both"), // 'solo' | 'team' | 'both'
 });
 
 export const quizSubmissions = pgTable("quiz_submissions", {
