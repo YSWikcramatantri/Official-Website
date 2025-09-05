@@ -254,21 +254,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin: Questions CRUD
-  app.get('/api/admin/questions', async (_req, res) => {
+  app.get('/api/admin/questions', async (req, res) => {
     try {
+      console.log('/api/admin/questions GET headers:', { auth: req.headers['authorization'] });
       const qs = await storage.getAllQuestions();
       res.json(qs);
     } catch (err) {
+      console.error('/api/admin/questions GET failed:', err);
       res.status(500).json({ message: 'Failed to fetch questions' });
     }
   });
 
   app.post('/api/admin/questions', async (req, res) => {
     try {
+      console.log('/api/admin/questions POST headers:', { auth: req.headers['authorization'] });
+      console.log('/api/admin/questions POST body preview:', JSON.stringify(req.body).slice(0, 500));
       const parsed = insertQuestionSchema.parse(req.body);
       const q = await storage.createQuestion(parsed as any);
       res.json(q);
     } catch (err) {
+      console.error('/api/admin/questions POST failed:', err);
       if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
       res.status(500).json({ message: (err as any)?.message || 'Failed to create question' });
     }
