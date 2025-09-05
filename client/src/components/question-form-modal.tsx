@@ -53,7 +53,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         correctAnswer: question.correctAnswer,
         timeLimit: question.timeLimit,
         marks: question.marks,
-        orderIndex: question.orderIndex
+        orderIndex: question.orderIndex,
+        mode: (question as any).mode ?? 'both'
       });
     } else {
       form.reset({
@@ -62,7 +63,8 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         correctAnswer: "A",
         timeLimit: 60,
         marks: 5,
-        orderIndex: 1
+        orderIndex: 1,
+        mode: 'both'
       });
     }
   }, [question, form]);
