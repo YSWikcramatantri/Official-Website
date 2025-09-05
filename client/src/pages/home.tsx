@@ -292,7 +292,30 @@ export default function Home() {
 
             {/* Participate Tab */}
             <TabsContent value="participate">
-              {/* ... participate form ... */}
+              <Card>
+                <CardHeader><CardTitle>Participate</CardTitle></CardHeader>
+                <CardContent>
+                  {settings?.quizActive ? (
+                    <Form {...passcodeForm}>
+                      <form onSubmit={passcodeForm.handleSubmit((d) => verifyPasscodeMutation.mutate(d))} className="space-y-4 max-w-md">
+                        <FormField control={passcodeForm.control} name="passcode" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Enter your passcode</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="XXXXXX" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <Button type="submit" className="w-full" disabled={verifyPasscodeMutation.isPending}>{verifyPasscodeMutation.isPending ? 'Verifying...' : 'Enter Quiz'}</Button>
+                      </form>
+                    </Form>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">The quiz is currently not active. Please check back later.</div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
