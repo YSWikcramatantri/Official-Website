@@ -274,47 +274,63 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
               <p className="text-xs text-gray-500 mt-2">Select the radio button next to the correct answer</p>
             </div>
 
-            <FormField control={form.control} name="mode" render={({ field }) => (
-              <FormItem>
+            {/* Mode: hide if modal was opened from a specific tab (initialData provides mode) and we're creating a new question */}
+            {(!initialData?.mode || isEditing) ? (
+              <FormField control={form.control} name="mode" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mode</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-3">
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="solo" checked={field.value === 'solo'} onChange={() => field.onChange('solo')} />
+                        <span>Solo</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="team" checked={field.value === 'team'} onChange={() => field.onChange('team')} />
+                        <span>Team</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="both" checked={field.value === 'both'} onChange={() => field.onChange('both')} />
+                        <span>Both</span>
+                      </label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            ) : (
+              <div>
                 <FormLabel>Mode</FormLabel>
-                <FormControl>
-                  <div className="flex gap-3">
-                    <label className="inline-flex items-center gap-2">
-                      <input type="radio" name="mode" value="solo" checked={field.value === 'solo'} onChange={() => field.onChange('solo')} />
-                      <span>Solo</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2">
-                      <input type="radio" name="mode" value="team" checked={field.value === 'team'} onChange={() => field.onChange('team')} />
-                      <span>Team</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2">
-                      <input type="radio" name="mode" value="both" checked={field.value === 'both'} onChange={() => field.onChange('both')} />
-                      <span>Both</span>
-                    </label>
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+                <div className="p-2 bg-gray-50 rounded text-sm">{initialData.mode}</div>
+              </div>
+            )}
 
-            <FormField control={form.control} name="subject" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Subject (optional)</FormLabel>
-                <FormControl>
-                  <select
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.target.value)}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="">-- Select subject --</option>
-                    {SUBJECTS.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            {/* Subject: hide if initialData.subject provided and not editing */}
+            {(!initialData?.subject || isEditing) ? (
+              <FormField control={form.control} name="subject" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subject (optional)</FormLabel>
+                  <FormControl>
+                    <select
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                    >
+                      <option value="">-- Select subject --</option>
+                      {SUBJECTS.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            ) : (
+              <div>
+                <FormLabel>Subject</FormLabel>
+                <div className="p-2 bg-gray-50 rounded text-sm">{initialData.subject}</div>
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
