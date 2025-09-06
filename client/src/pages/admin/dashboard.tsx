@@ -372,7 +372,7 @@ export default function AdminDashboard() {
                           <TabsContent key={s} value={s} className="mt-4">
                             <div className="flex items-center justify-between mb-3">
                               <div className="text-sm text-muted-foreground">Showing questions for subject: {s}</div>
-                              <Button size="sm" onClick={() => { setEditingQuestion(null); setIsQuestionModalOpen(true); }}>Add Question for {s}</Button>
+                              <Button size="sm" onClick={() => { setEditingQuestion(null); setQuestionModalInitialData({ mode: 'team', subject: s }); setIsQuestionModalOpen(true); }}>Add Question for {s}</Button>
                             </div>
 
                             <Table>
