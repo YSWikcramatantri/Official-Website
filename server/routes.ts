@@ -208,13 +208,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
     try {
-      console.log('/api/quiz-submissions body preview:', JSON.stringify(req.body).slice(0,500));
+      console.log('/api/quiz-submissions body (full):', util.inspect(req.body, { depth: 4, maxArrayLength: 50 }));
       // Expect minimal submission data from client
-      const payload = z.object({
+      const schemaPayload = z.object({
         participantId: z.string().min(1),
         answers: z.record(z.string()),
         timeTaken: z.number().int().nonnegative()
-      }).parse(req.body);
+      });
+      const parsed = schemaPayload.safeParse(req.body);
+      if (!parsed.success) {
+        console.error('/api/quiz-submissions validation failed:', parsed.error.format());
+        return res.status(400).json({ message: 'Invalid submission data', details: parsed.error.format() });
+      }
+      const payload = parsed.data;
 
       const participant = await storage.getParticipant(payload.participantId);
       if (!participant) return res.status(404).json({ message: 'Participant not found' });
