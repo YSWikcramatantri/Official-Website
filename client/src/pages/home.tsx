@@ -114,7 +114,13 @@ export default function Home() {
     onSuccess: (data) => {
       sessionStorage.setItem("participant", JSON.stringify(data.participant));
       toast({ title: "Passcode Verified!", description: `Welcome ${data.participant.name}! Starting quiz...` });
-      setTimeout(() => setLocation("/quiz"), 1000);
+      const mode = data.participant.mode;
+      const subject = data.participant.subject;
+      const query = [] as string[];
+      if (mode) query.push(`mode=${encodeURIComponent(mode)}`);
+      if (subject) query.push(`subject=${encodeURIComponent(subject)}`);
+      const path = `/quiz${query.length ? `?${query.join('&')}` : ''}`;
+      setTimeout(() => setLocation(path), 800);
     },
     onError: (error: any) => toast({ title: "Invalid Passcode", description: error.message, variant: "destructive" }),
   });
