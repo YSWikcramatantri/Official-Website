@@ -396,7 +396,7 @@ export default function AdminDashboard() {
                                     <TableCell>{q.marks}</TableCell>
                                     <TableCell>
                                       <div className="flex gap-2 items-center">
-                                        <Button size="sm" onClick={() => { setEditingQuestion(q); setIsQuestionModalOpen(true); }}>Edit</Button>
+                                        <Button size="sm" onClick={() => { setEditingQuestion(q); setQuestionModalInitialData(null); setIsQuestionModalOpen(true); }}>Edit</Button>
                                         <Button variant="destructive" size="sm" onClick={async () => {
                                           if (!confirm('Delete this question?')) return;
                                           try {
