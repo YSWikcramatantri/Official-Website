@@ -22,6 +22,8 @@ interface EnrichedSubmission {
   participantId: string;
   participantName: string;
   schoolId?: string | null;
+  participantMode?: string;
+  subject?: string | null;
   score: number;
   timeTaken: number;
 }
