@@ -53,6 +53,20 @@ export default function AdminDashboard() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [questionModalInitialData, setQuestionModalInitialData] = useState<any>(null);
 
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [selectedSubmissionDetails, setSelectedSubmissionDetails] = useState<any | null>(null);
+
+  const openSubmissionDetails = async (id: string) => {
+    try {
+      const res = await apiRequest('GET', `/api/admin/quiz-submissions/${id}`);
+      const data = await res.json();
+      setSelectedSubmissionDetails(data);
+      setIsSubmissionModalOpen(true);
+    } catch (e: any) {
+      toast({ title: 'Failed to load submission', description: (e as any)?.message, variant: 'destructive' });
+    }
+  };
+
   const questionsQuery = useQuery<Question[] | null>({ queryKey: ["/api/admin/questions"], queryFn: getQueryFn({ on401: "returnNull" }) });
   const questions = questionsQuery.data ?? [];
 
