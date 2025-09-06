@@ -294,7 +294,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('/api/admin/questions POST headers:', { auth: req.headers['authorization'] });
       console.log('/api/admin/questions POST body preview:', JSON.stringify(req.body).slice(0, 500));
-      const parsed = insertQuestionSchema.parse(req.body);
+      let parsed = insertQuestionSchema.parse(req.body) as any;
+      // Ensure solo questions don't carry a subject
+      if (parsed.mode === 'solo') parsed.subject = null;
       const q = await storage.createQuestion(parsed as any);
       res.json(q);
     } catch (err) {
