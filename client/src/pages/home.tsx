@@ -108,6 +108,10 @@ export default function Home() {
       setSoloParticipant(null);
       toast({ title: "School Registration Successful!" });
       schoolForm.reset();
+      // refresh admin dashboard data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: any) => toast({ title: "Registration Failed", description: error.message, variant: "destructive" }),
   });
