@@ -375,13 +375,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantId: s.participantId,
           participantName: p?.name ?? "Unknown",
           schoolId: p?.schoolId ?? null,
+          participantMode: p?.mode ?? 'solo',
           score: s.score,
           timeTaken: s.timeTaken,
         };
       });
       res.json(enriched);
-    } catch {
+    } catch (e) {
+      console.error('/api/admin/quiz-submissions GET failed', e);
       res.status(500).json({ message: "Failed to fetch submissions" });
+    }
+  });
+
+  // Get a single submission with answers and participant info
+  app.get('/api/admin/quiz-submissions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+      const participant = await storage.getParticipant(submission.participantId as string);
+      res.json({ submission, participant });
+    } catch (e) {
+      console.error('/api/admin/quiz-submissions/:id failed', e);
+      res.status(500).json({ message: 'Failed to fetch submission' });
     }
   });
 
