@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, LogOut, Users, User, Trophy, Trash2, Home, Star } from "lucide-react";
 import QuestionFormModal from "@/components/question-form-modal";
+import SubmissionDetailsModal from "@/components/submission-details-modal";
 import type { Participant, School, SystemSettings, Question } from "@shared/schema";
 
 interface SchoolWithMembers extends School {
