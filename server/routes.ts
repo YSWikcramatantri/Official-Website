@@ -208,6 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
     try {
+      console.log('/api/quiz-submissions body preview:', JSON.stringify(req.body).slice(0,500));
       // Expect minimal submission data from client
       const payload = z.object({
         participantId: z.string().min(1),
