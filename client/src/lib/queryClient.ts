@@ -50,6 +50,14 @@ export async function apiRequest(
     throw err;
   }
 
+  // If server returned HTML (eg. index.html) it's likely a misrouted request or an auth redirect.
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/html')) {
+    const text = await res.text();
+    const preview = text.slice(0, 300);
+    throw new Error(`Expected JSON but received HTML response (status ${res.status}): ${preview}`);
+  }
+
   await throwIfResNotOk(res);
   return res;
 }

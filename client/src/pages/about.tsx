@@ -84,12 +84,12 @@ export default function About() {
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link href="/home">
-                    <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
+                    <Button size="lg">
                       Take Quiz
                       <ChevronRight className="ml-2" size={20} />
                     </Button>
                   </Link>
-                  <Button variant="outline" size="lg" className="border-white text-white hover:bg-white hover:text-primary">
+                  <Button size="lg">
                     Learn More
                   </Button>
                 </div>
@@ -276,7 +276,7 @@ export default function About() {
 
             <div className="flex justify-center gap-4">
               <Link href="/home">
-                <Button size="lg" className="bg-primary hover:bg-primary/90">
+                <Button size="lg">
                   Take Our Quiz
                   <ExternalLink className="ml-2" size={20} />
                 </Button>

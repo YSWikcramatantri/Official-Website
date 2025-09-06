@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { Participant, Question } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface QuizQuestion extends Omit<Question, 'correctAnswer'> {
   // Remove correctAnswer from client-side question type
@@ -35,8 +35,20 @@ export default function Quiz() {
   }, [participant.id, setLocation]);
 
   const { data: questions = [], isLoading } = useQuery<QuizQuestion[]>({
-    queryKey: ['/api/questions'],
+    queryKey: ['/api/questions', participant.mode, participant.subject],
     enabled: !!participant.id,
+    queryFn: async () => {
+      const mode = participant.mode;
+      const subject = (participant.subject as string) || '';
+      const passcode = (participant.passcode as string) || '';
+      const params = [] as string[];
+      if (mode) params.push(`mode=${encodeURIComponent(mode)}`);
+      if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+      if (passcode) params.push(`passcode=${encodeURIComponent(passcode)}`);
+      const query = params.length ? `?${params.join('&')}` : '';
+      const res = await apiRequest('GET', `/api/questions${query}`);
+      return res.json();
+    }
   });
 
   const submitQuizMutation = useMutation({
@@ -55,7 +67,15 @@ export default function Quiz() {
         title: "Quiz Completed!",
         description: "Thank you for participating! Your submission has been recorded.",
       });
-      
+
+      // refresh admin dashboard data (if admin is viewing)
+      try {
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      } catch (e) {
+        console.debug('Unable to invalidate admin queries from quiz page', e);
+      }
+
       // Clear participant data and redirect after a delay
       setTimeout(() => {
         sessionStorage.removeItem('participant');
@@ -389,11 +409,11 @@ export default function Quiz() {
                     value={key}
                     checked={selectedAnswer === key}
                     onChange={(e) => handleAnswerSelect(e.target.value)}
-                    className="mr-4 text-primary"
+                    className="mr-4 accent-[hsl(var(--primary))] focus:outline-none"
                     data-testid={`input-option-${key}`}
                   />
-                  <span className="font-medium text-gray-700">{key}.</span>
-                  <span className="ml-2">{value}</span>
+                  <span className="font-medium text-[hsl(var(--card-foreground))]">{key}.</span>
+                  <span className="ml-2 text-[hsl(var(--card-foreground))]">{value}</span>
                 </label>
               ))}
             </div>

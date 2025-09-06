@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Settings, LogOut, Users, User, Trophy, Trash2, Home, Star } from "lucide-react";
-import type { Participant, School, SystemSettings } from "@shared/schema";
+import QuestionFormModal from "@/components/question-form-modal";
+import SubmissionDetailsModal from "@/components/submission-details-modal";
+import type { Participant, School, SystemSettings, Question } from "@shared/schema";
 
 interface SchoolWithMembers extends School {
   members: Participant[];
@@ -20,6 +22,8 @@ interface EnrichedSubmission {
   participantId: string;
   participantName: string;
   schoolId?: string | null;
+  participantMode?: string;
+  subject?: string | null;
   score: number;
   timeTaken: number;
 }
@@ -46,6 +50,27 @@ export default function AdminDashboard() {
   const participants = participantsQuery.data ?? [];
   const schools = (schoolsQuery.data ?? []).map(s => ({ ...s, members: s.members ?? [] }));
   const submissions = submissionsQuery.data ?? [];
+
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [questionModalInitialData, setQuestionModalInitialData] = useState<any>(null);
+
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [selectedSubmissionDetails, setSelectedSubmissionDetails] = useState<any | null>(null);
+
+  const openSubmissionDetails = async (id: string) => {
+    try {
+      const res = await apiRequest('GET', `/api/admin/quiz-submissions/${id}`);
+      const data = await res.json();
+      setSelectedSubmissionDetails(data);
+      setIsSubmissionModalOpen(true);
+    } catch (e: any) {
+      toast({ title: 'Failed to load submission', description: (e as any)?.message, variant: 'destructive' });
+    }
+  };
+
+  const questionsQuery = useQuery<Question[] | null>({ queryKey: ["/api/admin/questions"], queryFn: getQueryFn({ on401: "returnNull" }) });
+  const questions = questionsQuery.data ?? [];
 
   const updateSettingsMutation = useMutation({
     mutationFn: (data: Partial<SystemSettings>) => apiRequest("PUT", "/api/admin/settings", data),
@@ -100,6 +125,8 @@ export default function AdminDashboard() {
       toast({ title: successTitle });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       return;
     } catch (e) {
       console.warn('DELETE failed; attempting POST fallback', e);
@@ -108,7 +135,7 @@ export default function AdminDashboard() {
     // fallback: some clients/filters block DELETE; try POST to /delete endpoint
     try {
       // extract resource and id
-      const match = url.match(/\/api\/admin\/(participants|schools)\/(.+)$/);
+      const match = url.match(/\/api\/admin\/(participants|schools|quiz-submissions)\/(.+)$/);
       if (!match) throw new Error('Unsupported delete URL');
       const resource = match[1];
       const id = match[2];
@@ -119,6 +146,7 @@ export default function AdminDashboard() {
       toast({ title: successTitle });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
       return;
     } catch (e) {
       const errMsg = (e as Error)?.message ?? 'Delete failed';
@@ -183,6 +211,7 @@ export default function AdminDashboard() {
           <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
             <TabsTrigger value="summary" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Summary</TabsTrigger>
             <TabsTrigger value="registrations" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Registrations</TabsTrigger>
+            <TabsTrigger value="submissions" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Submissions</TabsTrigger>
             <TabsTrigger value="questions" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Questions</TabsTrigger>
           </TabsList>
           <TabsContent value="summary" className="grid lg:grid-cols-3 gap-6 mt-6">
@@ -221,11 +250,12 @@ export default function AdminDashboard() {
               </TabsList>
               <TabsContent value="schools">
                 <Table>
-                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Members</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+                  <TableHeader><TableRow><TableHead>School</TableHead><TableHead>Team</TableHead><TableHead>Members</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                   <TableBody>
                     {schools.map(s => (
                       <TableRow key={s.id}>
                         <TableCell className="align-top">{s.name}</TableCell>
+                        <TableCell className="align-top">{s.team ?? 'A'}</TableCell>
                         <TableCell>
                           <div>
                             {(s.members ?? []).map(m => (
@@ -275,8 +305,259 @@ export default function AdminDashboard() {
               </TabsContent>
             </Tabs>
           </TabsContent>
+          <TabsContent value="submissions">
+            {submissionsQuery.data === null ? (
+              <Card>
+                <CardHeader><CardTitle>Admin access required</CardTitle></CardHeader>
+                <CardContent>
+                  <p className="mb-4">You must be logged in as an admin to view submissions.</p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setLocation('/admin/x9k2p8m7q1')}>Go to Admin Login</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Submissions</h3>
+                </div>
+
+                <div className="mt-4">
+                  <Tabs defaultValue="solo">
+                    <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                      <TabsTrigger value="solo" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Solo</TabsTrigger>
+                      <TabsTrigger value="team" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Team</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="solo" className="mt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Participant</TableHead>
+                            <TableHead>Score</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          { (submissions ?? []).filter(s => s.participantMode === 'solo').map(s => (
+                            <TableRow key={s.id}>
+                              <TableCell>{s.participantName}</TableCell>
+                              <TableCell>{s.score}</TableCell>
+                              <TableCell>{s.timeTaken}s</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button size="sm" onClick={() => openSubmissionDetails(s.id)}>View</Button>
+                                  <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this submission?')) return; await handleDeleteResource(`/api/admin/quiz-submissions/${s.id}`, 'Submission deleted'); }}>
+                                    Delete
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )) }
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+
+                    <TabsContent value="team" className="mt-4">
+                      <div className="space-y-4">
+                        {schools.map(school => {
+                          const schoolSubs = (submissions ?? []).filter(sub => sub.schoolId === school.id);
+                          if (schoolSubs.length === 0) return null;
+                          return (
+                            <Card key={school.id}>
+                              <CardHeader>
+                                <CardTitle className="flex items-center justify-between">
+                                  <span>{school.name} • Team {school.team ?? 'A'}</span>
+                                  <div className="text-right">
+                                    <div className="text-sm text-muted-foreground">{schoolSubs.length} submission(s)</div>
+                                    <div className="text-sm font-semibold">Total: {schoolSubs.reduce((a, b) => a + (b.score ?? 0), 0)} pts</div>
+                                  </div>
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Participant</TableHead>
+                                      <TableHead>Subject</TableHead>
+                                      <TableHead>Score</TableHead>
+                                      <TableHead>Time</TableHead>
+                                      <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {schoolSubs.map(sub => (
+                                      <TableRow key={sub.id}>
+                                        <TableCell>{sub.participantName}</TableCell>
+                                        <TableCell>{sub.subject ?? '—'}</TableCell>
+                                        <TableCell>{sub.score}</TableCell>
+                                        <TableCell>{sub.timeTaken}s</TableCell>
+                                        <TableCell>
+                                          <div className="flex gap-2">
+                                            <Button size="sm" onClick={() => openSubmissionDetails(sub.id)}>View</Button>
+                                            <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this submission?')) return; await handleDeleteResource(`/api/admin/quiz-submissions/${sub.id}`, 'Submission deleted'); }}>
+                                              Delete
+                                            </Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <SubmissionDetailsModal isOpen={isSubmissionModalOpen} onClose={() => setIsSubmissionModalOpen(false)} submission={selectedSubmissionDetails?.submission} participantName={selectedSubmissionDetails?.participant?.name ?? ''} />
+              </>
+            )}
+          </TabsContent>
+
           <TabsContent value="questions">
-            {/* Questions management */}
+            {questionsQuery.data === null ? (
+              <Card>
+                <CardHeader><CardTitle>Admin access required</CardTitle></CardHeader>
+                <CardContent>
+                  <p className="mb-4">You must be logged in as an admin to view and manage questions.</p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setLocation('/admin/x9k2p8m7q1')}>Go to Admin Login</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Questions</h3>
+                </div>
+
+                <div className="mt-4">
+                  {/* Sub-tabs: Solo and Team */}
+                  <Tabs defaultValue="solo">
+                    <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                      <TabsTrigger value="solo" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Solo</TabsTrigger>
+                      <TabsTrigger value="team" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Team</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="solo" className="mt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm text-muted-foreground">Showing questions for Solo (mode = solo)</div>
+                        <Button size="sm" onClick={() => { setEditingQuestion(null); setQuestionModalInitialData({ mode: 'solo', subject: '' }); setIsQuestionModalOpen(true); }}>Add Solo Question</Button>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order</TableHead>
+                            <TableHead>Text</TableHead>
+                            <TableHead>Mode</TableHead>
+                            <TableHead>Time (s)</TableHead>
+                            <TableHead>Marks</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {questions.filter(q => ((q as any).mode === 'solo')).map(q => (
+                            <TableRow key={q.id}>
+                              <TableCell>{q.orderIndex}</TableCell>
+                              <TableCell className="max-w-xl truncate">{q.text}</TableCell>
+                              <TableCell>{(q as any).mode ?? 'both'}</TableCell>
+                              <TableCell>{q.timeLimit}</TableCell>
+                              <TableCell>{q.marks}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2 items-center">
+                                  <Button size="sm" onClick={() => { setEditingQuestion(q); setQuestionModalInitialData(null); setIsQuestionModalOpen(true); }}>Edit</Button>
+                                  <Button variant="destructive" size="sm" onClick={async () => {
+                                    if (!confirm('Delete this question?')) return;
+                                    try {
+                                      await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
+                                      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+                                      toast({ title: 'Question deleted' });
+                                    } catch (e: any) {
+                                      toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
+                                    }
+                                  }}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+
+                    <TabsContent value="team" className="mt-4">
+                      {/* Team subjects nested tabs */}
+                      <Tabs defaultValue="Astrophysics">
+                        <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                          { ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"].map(s => (
+                            <TabsTrigger key={s} value={s} className="rounded-lg px-3 py-2 text-sm data-[state=active]:bg-[hsl(var(--card))]">{s}</TabsTrigger>
+                          )) }
+                        </TabsList>
+
+                        { ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"].map(s => (
+                          <TabsContent key={s} value={s} className="mt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="text-sm text-muted-foreground">Showing questions for subject: {s}</div>
+                              <Button size="sm" onClick={() => { setEditingQuestion(null); setQuestionModalInitialData({ mode: 'team', subject: s }); setIsQuestionModalOpen(true); }}>Add Question for {s}</Button>
+                            </div>
+
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Order</TableHead>
+                                  <TableHead>Text</TableHead>
+                                  <TableHead>Mode</TableHead>
+                                  <TableHead>Time (s)</TableHead>
+                                  <TableHead>Marks</TableHead>
+                                  <TableHead>Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {questions.filter(q => (((q as any).mode === 'team' || (q as any).mode === 'both') && (q as any).subject === s)).map(q => (
+                                  <TableRow key={q.id}>
+                                    <TableCell>{q.orderIndex}</TableCell>
+                                    <TableCell className="max-w-xl truncate">{q.text}</TableCell>
+                                    <TableCell>{(q as any).mode ?? 'both'}</TableCell>
+                                    <TableCell>{q.timeLimit}</TableCell>
+                                    <TableCell>{q.marks}</TableCell>
+                                    <TableCell>
+                                      <div className="flex gap-2 items-center">
+                                        <Button size="sm" onClick={() => { setEditingQuestion(q); setQuestionModalInitialData(null); setIsQuestionModalOpen(true); }}>Edit</Button>
+                                        <Button variant="destructive" size="sm" onClick={async () => {
+                                          if (!confirm('Delete this question?')) return;
+                                          try {
+                                            await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
+                                            queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+                                            toast({ title: 'Question deleted' });
+                                          } catch (e: any) {
+                                            toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
+                                          }
+                                        }}>
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    </TabsContent>
+
+                  </Tabs>
+                </div>
+
+                <QuestionFormModal isOpen={isQuestionModalOpen} onClose={() => { setIsQuestionModalOpen(false); setEditingQuestion(null); setQuestionModalInitialData(null); }} question={editingQuestion} initialData={questionModalInitialData} />
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </main>

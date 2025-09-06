@@ -9,6 +9,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import crypto from "crypto";
+import util from "util";
 
 const SUBJECTS = ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"];
 
@@ -167,11 +168,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get quiz questions (public fetch; client controls access via passcode verification)
-  app.get("/api/questions", async (_req, res) => {
+  app.get("/api/questions", async (req, res) => {
     try {
-      const qs = await storage.getAllQuestions();
+      const passcode = (req.query?.passcode as string) || null;
+      if (!passcode) return res.status(403).json({ message: "Passcode required" });
+      const participant = await storage.getParticipantByPasscode(passcode);
+      if (!participant) return res.status(404).json({ message: "Invalid passcode" });
+      if (participant.hasCompletedQuiz) return res.status(403).json({ message: "Quiz already completed for this participant" });
+
+      // Use participant's registered mode/subject to filter questions
+      const mode = participant.mode;
+      const subject = participant.subject || null;
+
+      let qs = await storage.getAllQuestions();
+      if (mode === 'solo') {
+        // Only questions explicitly marked for solo and without a subject should be used for solo participants
+        qs = qs.filter(q => (q as any).mode === 'solo' && !(q as any).subject);
+      } else if (mode === 'school' || mode === 'team') {
+        // support 'school' legacy value
+        qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
+      }
+      if (subject) {
+        qs = qs.filter(q => (q as any).subject === subject);
+      }
+
+      // Debug logging to help trace unexpected question exposure
+      try {
+        console.log(`/api/questions: passcode=${passcode} participantMode=${participant.mode} subject=${participant.subject} matched=${qs.map(q => q.id).join(',')}`);
+      } catch (e) {
+        console.log('/api/questions debug log failed', e);
+      }
+
       res.json(qs);
     } catch (error) {
+      console.error('/api/questions failed:', error);
       res.status(500).json({ message: "Failed to fetch questions" });
     }
   });
@@ -179,16 +209,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
     try {
-      const parsed = insertQuizSubmissionSchema.parse(req.body);
-      const submission = await storage.createQuizSubmission(parsed);
-      // mark participant as completed
-      await storage.updateParticipant(parsed.participantId, { hasCompletedQuiz: true });
-      res.json(submission);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid submission data", details: error.errors });
+      console.log('/api/quiz-submissions body (full):', util.inspect(req.body, { depth: 4, maxArrayLength: 50 }));
+      // Expect minimal submission data from client
+      const schemaPayload = z.object({
+        participantId: z.string().min(1),
+        answers: z.record(z.string()),
+        timeTaken: z.number().int().nonnegative()
+      });
+      const parsed = schemaPayload.safeParse(req.body);
+      if (!parsed.success) {
+        console.error('/api/quiz-submissions validation failed:', parsed.error.format());
+        return res.status(400).json({ message: 'Invalid submission data', details: parsed.error.format() });
       }
-      res.status(500).json({ message: "Failed to submit quiz" });
+      const payload = parsed.data;
+
+      const participant = await storage.getParticipant(payload.participantId);
+      if (!participant) return res.status(404).json({ message: 'Participant not found' });
+      if (participant.hasCompletedQuiz) return res.status(403).json({ message: 'Participant already completed quiz' });
+
+      // Fetch applicable questions for this participant
+      let qs = await storage.getAllQuestions();
+      if (participant.mode === 'solo') {
+        qs = qs.filter(q => (q as any).mode === 'solo' && !(q as any).subject);
+      } else {
+        qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
+        if (participant.subject) qs = qs.filter(q => (q as any).subject === participant.subject);
+      }
+
+      // Compute score and total marks
+      let score = 0;
+      let totalMarks = 0;
+      for (const q of qs) {
+        totalMarks += (q as any).marks || 0;
+        const userAns = payload.answers[(q as any).id];
+        if (userAns && userAns === (q as any).correctAnswer) {
+          score += (q as any).marks || 0;
+        }
+      }
+
+      const toSave = {
+        participantId: payload.participantId,
+        answers: payload.answers,
+        score,
+        totalMarks,
+        timeTaken: payload.timeTaken
+      } as any;
+
+      const created = await storage.createQuizSubmission(toSave);
+      await storage.updateParticipant(payload.participantId, { hasCompletedQuiz: true });
+
+      res.json(created);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: 'Invalid submission payload', details: error.errors });
+      console.error('/api/quiz-submissions failed', error);
+      res.status(500).json({ message: 'Failed to submit quiz' });
     }
   });
 
@@ -249,6 +323,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin: Questions CRUD
+  app.get('/api/admin/questions', async (req, res) => {
+    try {
+      console.log('/api/admin/questions GET headers:', { auth: req.headers['authorization'] });
+      const qs = await storage.getAllQuestions();
+      res.json(qs);
+    } catch (err) {
+      console.error('/api/admin/questions GET failed:', err);
+      res.status(500).json({ message: 'Failed to fetch questions' });
+    }
+  });
+
+  app.post('/api/admin/questions', async (req, res) => {
+    try {
+      console.log('/api/admin/questions POST headers:', { auth: req.headers['authorization'] });
+      console.log('/api/admin/questions POST body preview:', JSON.stringify(req.body).slice(0, 500));
+      let parsed = insertQuestionSchema.parse(req.body) as any;
+      // Ensure solo questions don't carry a subject
+      if (parsed.mode === 'solo') parsed.subject = null;
+      const q = await storage.createQuestion(parsed as any);
+      res.json(q);
+    } catch (err) {
+      console.error('/api/admin/questions POST failed:', err);
+      if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
+      const message = (err as any)?.message || 'Failed to create question';
+      // Expose stack when not in production for easier debugging
+      if (process.env.NODE_ENV !== 'production') {
+        return res.status(500).json({ message, stack: (err as any)?.stack });
+      }
+      res.status(500).json({ message });
+    }
+  });
+
+  app.put('/api/admin/questions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      let parsed = insertQuestionSchema.parse(req.body) as any;
+      if (parsed.mode === 'solo') parsed.subject = null;
+      const updated = await storage.updateQuestion(id, parsed as any);
+      if (!updated) return res.status(404).json({ message: 'Question not found' });
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
+      res.status(500).json({ message: (err as any)?.message || 'Failed to update question' });
+    }
+  });
+
+  app.delete('/api/admin/questions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const deleted = await storage.deleteQuestion(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: 'Question not found' });
+    } catch (err) {
+      res.status(500).json({ message: 'Failed to delete question' });
+    }
+  });
+
   app.get("/api/admin/stats", async (_req, res) => {
     try {
       const [allParticipants, allSchools, allSubs] = await Promise.all([
@@ -288,13 +420,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantId: s.participantId,
           participantName: p?.name ?? "Unknown",
           schoolId: p?.schoolId ?? null,
+          participantMode: p?.mode ?? 'solo',
+          subject: p?.subject ?? null,
           score: s.score,
           timeTaken: s.timeTaken,
         };
       });
       res.json(enriched);
-    } catch {
+    } catch (e) {
+      console.error('/api/admin/quiz-submissions GET failed', e);
       res.status(500).json({ message: "Failed to fetch submissions" });
+    }
+  });
+
+  // Get a single submission with answers and participant info
+  app.get('/api/admin/quiz-submissions/:id', async (req, res) => {
+    try {
+      const id = req.params.id;
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+      const participant = await storage.getParticipant(submission.participantId as string);
+      res.json({ submission, participant });
+    } catch (e) {
+      console.error('/api/admin/quiz-submissions/:id failed', e);
+      res.status(500).json({ message: 'Failed to fetch submission' });
     }
   });
 
@@ -404,6 +553,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete school via POST:", error);
       res.status(500).json({ message: "Failed to delete school" });
+    }
+  });
+
+  // Delete a quiz submission (admin)
+  app.delete('/api/admin/quiz-submissions/:id', async (req, res) => {
+    try {
+      const id = req.params?.id || req.body?.id || req.query?.id;
+      console.log('DELETE quiz submission request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+
+      // Reset participant's completed flag if participant exists
+      if (submission.participantId) {
+        try {
+          await storage.updateParticipant(submission.participantId as string, { hasCompletedQuiz: false });
+        } catch (e) {
+          console.error('Failed to reset participant hasCompletedQuiz flag:', e);
+        }
+      }
+
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(500).json({ message: 'Failed to delete submission' });
+    } catch (error) {
+      console.error('Failed to delete submission:', error);
+      res.status(500).json({ message: 'Failed to delete submission' });
+    }
+  });
+
+  app.delete('/api/admin/quiz-submissions', async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log('DELETE quiz submission (alt) request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+
+      if (submission.participantId) {
+        try {
+          await storage.updateParticipant(submission.participantId as string, { hasCompletedQuiz: false });
+        } catch (e) {
+          console.error('Failed to reset participant hasCompletedQuiz flag (alt):', e);
+        }
+      }
+
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(500).json({ message: 'Failed to delete submission' });
+    } catch (error) {
+      console.error('Failed to delete submission (alt):', error);
+      res.status(500).json({ message: 'Failed to delete submission (alt)' });
+    }
+  });
+
+  app.post('/api/admin/quiz-submissions/delete', async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log('POST delete submission request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+
+      if (submission.participantId) {
+        try {
+          await storage.updateParticipant(submission.participantId as string, { hasCompletedQuiz: false });
+        } catch (e) {
+          console.error('Failed to reset participant hasCompletedQuiz flag (post):', e);
+        }
+      }
+
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(500).json({ message: 'Failed to delete submission' });
+    } catch (error) {
+      console.error('Failed to delete submission via POST:', error);
+      res.status(500).json({ message: 'Failed to delete submission' });
     }
   });
 

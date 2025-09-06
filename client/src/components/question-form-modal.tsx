@@ -25,11 +25,14 @@ interface QuestionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   question?: Question | null;
+  initialData?: Partial<InsertQuestion> | null;
 }
 
-export default function QuestionFormModal({ isOpen, onClose, question }: QuestionFormModalProps) {
+export default function QuestionFormModal({ isOpen, onClose, question, initialData }: QuestionFormModalProps) {
   const { toast } = useToast();
   const isEditing = !!question;
+
+  const SUBJECTS = ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"];
 
   const form = useForm<InsertQuestion>({
     resolver: zodResolver(insertQuestionSchema),
@@ -39,11 +42,14 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
       correctAnswer: "A",
       timeLimit: 60,
       marks: 5,
-      orderIndex: 1
+      orderIndex: 1,
+      mode: 'both',
+      subject: '',
+      ...(initialData || {})
     }
   });
 
-  // Reset form when question changes
+  // Reset form when question or initialData changes
   useEffect(() => {
     if (question) {
       form.reset({
@@ -52,7 +58,9 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         correctAnswer: question.correctAnswer,
         timeLimit: question.timeLimit,
         marks: question.marks,
-        orderIndex: question.orderIndex
+        orderIndex: question.orderIndex,
+        mode: (question as any).mode ?? 'both',
+        subject: (question as any).subject ?? ''
       });
     } else {
       form.reset({
@@ -61,10 +69,14 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         correctAnswer: "A",
         timeLimit: 60,
         marks: 5,
-        orderIndex: 1
+        orderIndex: 1,
+        mode: 'both',
+        subject: '',
+        ...(initialData || {})
       });
     }
-  }, [question, form]);
+  }, [question, initialData, form]);
+
 
   const createQuestionMutation = useMutation({
     mutationFn: async (data: InsertQuestion) => {
@@ -83,7 +95,7 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
     onError: (error) => {
       toast({
         title: "Failed to Create Question",
-        description: error.message,
+        description: (error as any)?.message,
         variant: "destructive",
       });
     }
@@ -123,7 +135,7 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white text-gray-900 dark:bg-gray-800 dark:text-white rounded-lg p-6">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Question" : "Add New Question"}
@@ -238,7 +250,7 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
                         </FormItem>
                       )}
                     />
-                    <span className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">
+                    <span className="w-8 h-8 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600">
                       {letter}
                     </span>
                     <FormField
@@ -247,7 +259,7 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input 
+                            <Input
                               placeholder={`Enter option ${letter}`}
                               {...field}
                             />
@@ -261,7 +273,75 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
               </div>
               <p className="text-xs text-gray-500 mt-2">Select the radio button next to the correct answer</p>
             </div>
-            
+
+            {/* Mode: hide if modal was opened from a specific tab (initialData provides mode) and we're creating a new question */}
+            {(!initialData?.mode || isEditing) ? (
+              <FormField control={form.control} name="mode" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mode</FormLabel>
+                  <FormControl>
+                    <div className="flex gap-3">
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="solo" checked={field.value === 'solo'} onChange={() => field.onChange('solo')} />
+                        <span>Solo</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="team" checked={field.value === 'team'} onChange={() => field.onChange('team')} />
+                        <span>Team</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input type="radio" name="mode" value="both" checked={field.value === 'both'} onChange={() => field.onChange('both')} />
+                        <span>Both</span>
+                      </label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            ) : (
+              // When modal opened from a tab and not editing, show read-only pills stacked with spacing
+              <div className="space-y-3">
+                {initialData.mode && (
+                  <div>
+                    <FormLabel>Mode</FormLabel>
+                    <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
+                  </div>
+                )}
+
+                {/* show subject pill only when provided and not solo */}
+                {initialData.subject && initialData.mode !== 'solo' && (
+                  <div className="">
+                    <FormLabel>Subject</FormLabel>
+                    <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.subject}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Subject input when not provided or when editing */}
+            { (initialData?.mode === 'solo' && !isEditing) ? null : (
+              (!initialData?.subject || isEditing) ? (
+                <FormField control={form.control} name="subject" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject (optional)</FormLabel>
+                    <FormControl>
+                      <select
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full border rounded px-3 py-2 bg-white text-gray-800 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
+                      >
+                        <option value="">-- Select subject --</option>
+                        {SUBJECTS.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              ) : null
+            )}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancel

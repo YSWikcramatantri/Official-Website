@@ -17,5 +17,13 @@ const config = {
     : undefined,
 } as const;
 
-export const pool = new Pool(config as any);
+let _pool: Pool;
+try {
+  _pool = new Pool(config as any);
+} catch (err) {
+  console.error('Failed to create PG pool with provided SSL configuration, falling back to no SSL:', err);
+  const fallback = { ...config, ssl: undefined } as any;
+  _pool = new Pool(fallback);
+}
+export const pool = _pool;
 export const db = drizzle(pool, { schema });
