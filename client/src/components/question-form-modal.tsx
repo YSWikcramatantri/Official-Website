@@ -301,7 +301,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
             ) : (
               <div>
                 <FormLabel>Mode</FormLabel>
-                <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
+                <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
               </div>
             )}
 
