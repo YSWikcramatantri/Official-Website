@@ -367,7 +367,10 @@ export default function AdminDashboard() {
                               <CardHeader>
                                 <CardTitle className="flex items-center justify-between">
                                   <span>{school.name} • Team {school.team ?? 'A'}</span>
-                                  <span className="text-sm text-muted-foreground">{schoolSubs.length} submission(s)</span>
+                                  <div className="text-right">
+                                    <div className="text-sm text-muted-foreground">{schoolSubs.length} submission(s)</div>
+                                    <div className="text-sm font-semibold">Total: {schoolSubs.reduce((a, b) => a + (b.score ?? 0), 0)} pts</div>
+                                  </div>
                                 </CardTitle>
                               </CardHeader>
                               <CardContent>
