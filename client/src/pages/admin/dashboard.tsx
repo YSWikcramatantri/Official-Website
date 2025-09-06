@@ -125,6 +125,8 @@ export default function AdminDashboard() {
       toast({ title: successTitle });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       return;
     } catch (e) {
       console.warn('DELETE failed; attempting POST fallback', e);
