@@ -588,12 +588,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = req.body?.id || req.query?.id;
       console.log('DELETE quiz submission (alt) request for id:', id);
       if (!id) return res.status(400).json({ message: 'Missing submission id' });
+
+      const submission = await storage.getQuizSubmission(id);
+      if (!submission) return res.status(404).json({ message: 'Submission not found' });
+
+      if (submission.participantId) {
+        try {
+          await storage.updateParticipant(submission.participantId as string, { hasCompletedQuiz: false });
+        } catch (e) {
+          console.error('Failed to reset participant hasCompletedQuiz flag (alt):', e);
+        }
+      }
+
       const deleted = await storage.deleteQuizSubmission(id);
       if (deleted) return res.json({ success: true });
-      return res.status(404).json({ message: 'Submission not found' });
+      return res.status(500).json({ message: 'Failed to delete submission' });
     } catch (error) {
       console.error('Failed to delete submission (alt):', error);
-      res.status(500).json({ message: 'Failed to delete submission' });
+      res.status(500).json({ message: 'Failed to delete submission (alt)' });
     }
   });
 
