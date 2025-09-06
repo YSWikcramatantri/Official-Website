@@ -172,8 +172,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mode = (req.query?.mode as string) || null; // 'solo' | 'team' | null
       const subject = (req.query?.subject as string) || null; // subject for team members
       let qs = await storage.getAllQuestions();
-      if (mode === 'solo' || mode === 'team') {
-        qs = qs.filter(q => (q as any).mode === mode || (q as any).mode === 'both');
+      if (mode === 'solo') {
+        qs = qs.filter(q => (q as any).mode === 'solo');
+      } else if (mode === 'team') {
+        qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
       }
       if (subject) {
         qs = qs.filter(q => (q as any).subject === subject);
