@@ -329,7 +329,7 @@ export default function AdminDashboard() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {questions.filter(q => ((q as any).mode === 'solo' || (q as any).mode === 'both')).map(q => (
+                          {questions.filter(q => ((q as any).mode === 'solo')).map(q => (
                             <TableRow key={q.id}>
                               <TableCell>{q.orderIndex}</TableCell>
                               <TableCell className="max-w-xl truncate">{q.text}</TableCell>
