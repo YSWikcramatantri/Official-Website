@@ -314,7 +314,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/admin/questions/:id', async (req, res) => {
     try {
       const id = req.params.id;
-      const parsed = insertQuestionSchema.parse(req.body);
+      let parsed = insertQuestionSchema.parse(req.body) as any;
+      if (parsed.mode === 'solo') parsed.subject = null;
       const updated = await storage.updateQuestion(id, parsed as any);
       if (!updated) return res.status(404).json({ message: 'Question not found' });
       res.json(updated);
