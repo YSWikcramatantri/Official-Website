@@ -95,7 +95,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
     onError: (error) => {
       toast({
         title: "Failed to Create Question",
-        description: error.message,
+        description: (error as any)?.message,
         variant: "destructive",
       });
     }
