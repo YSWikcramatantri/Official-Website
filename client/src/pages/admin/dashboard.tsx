@@ -344,6 +344,9 @@ export default function AdminDashboard() {
                               <TableCell>
                                 <div className="flex gap-2">
                                   <Button size="sm" onClick={() => openSubmissionDetails(s.id)}>View</Button>
+                                  <Button variant="destructive" size="sm" onClick={async () => { if (!confirm('Delete this submission?')) return; await handleDeleteResource(`/api/admin/quiz-submissions/${s.id}`, 'Submission deleted'); }}>
+                                    Delete
+                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
