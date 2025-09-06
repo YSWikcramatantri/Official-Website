@@ -375,6 +375,7 @@ export default function AdminDashboard() {
                                   <TableHeader>
                                     <TableRow>
                                       <TableHead>Participant</TableHead>
+                                      <TableHead>Subject</TableHead>
                                       <TableHead>Score</TableHead>
                                       <TableHead>Time</TableHead>
                                       <TableHead>Actions</TableHead>
@@ -384,6 +385,7 @@ export default function AdminDashboard() {
                                     {schoolSubs.map(sub => (
                                       <TableRow key={sub.id}>
                                         <TableCell>{sub.participantName}</TableCell>
+                                        <TableCell>{sub.subject ?? '—'}</TableCell>
                                         <TableCell>{sub.score}</TableCell>
                                         <TableCell>{sub.timeTaken}s</TableCell>
                                         <TableCell>
