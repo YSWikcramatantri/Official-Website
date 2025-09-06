@@ -421,6 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           participantName: p?.name ?? "Unknown",
           schoolId: p?.schoolId ?? null,
           participantMode: p?.mode ?? 'solo',
+          subject: p?.subject ?? null,
           score: s.score,
           timeTaken: s.timeTaken,
         };
