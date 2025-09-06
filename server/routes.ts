@@ -208,16 +208,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Submit quiz answers
   app.post("/api/quiz-submissions", async (req, res) => {
     try {
-      const parsed = insertQuizSubmissionSchema.parse(req.body);
-      const submission = await storage.createQuizSubmission(parsed);
-      // mark participant as completed
-      await storage.updateParticipant(parsed.participantId, { hasCompletedQuiz: true });
-      res.json(submission);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid submission data", details: error.errors });
+      // Expect minimal submission data from client
+      const payload = z.object({
+        participantId: z.string().min(1),
+        answers: z.record(z.string()),
+        timeTaken: z.number().int().nonnegative()
+      }).parse(req.body);
+
+      const participant = await storage.getParticipant(payload.participantId);
+      if (!participant) return res.status(404).json({ message: 'Participant not found' });
+      if (participant.hasCompletedQuiz) return res.status(403).json({ message: 'Participant already completed quiz' });
+
+      // Fetch applicable questions for this participant
+      let qs = await storage.getAllQuestions();
+      if (participant.mode === 'solo') {
+        qs = qs.filter(q => (q as any).mode === 'solo' && !(q as any).subject);
+      } else {
+        qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
+        if (participant.subject) qs = qs.filter(q => (q as any).subject === participant.subject);
       }
-      res.status(500).json({ message: "Failed to submit quiz" });
+
+      // Compute score and total marks
+      let score = 0;
+      let totalMarks = 0;
+      for (const q of qs) {
+        totalMarks += (q as any).marks || 0;
+        const userAns = payload.answers[(q as any).id];
+        if (userAns && userAns === (q as any).correctAnswer) {
+          score += (q as any).marks || 0;
+        }
+      }
+
+      const toSave = {
+        participantId: payload.participantId,
+        answers: payload.answers,
+        score,
+        totalMarks,
+        timeTaken: payload.timeTaken
+      } as any;
+
+      const created = await storage.createQuizSubmission(toSave);
+      await storage.updateParticipant(payload.participantId, { hasCompletedQuiz: true });
+
+      res.json(created);
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(400).json({ message: 'Invalid submission payload', details: error.errors });
+      console.error('/api/quiz-submissions failed', error);
+      res.status(500).json({ message: 'Failed to submit quiz' });
     }
   });
 
