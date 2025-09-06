@@ -50,6 +50,7 @@ export default function AdminDashboard() {
 
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [questionModalInitialData, setQuestionModalInitialData] = useState<any>(null);
 
   const questionsQuery = useQuery<Question[] | null>({ queryKey: ["/api/admin/questions"], queryFn: getQueryFn({ on401: "returnNull" }) });
   const questions = questionsQuery.data ?? [];
