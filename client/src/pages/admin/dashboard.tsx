@@ -206,6 +206,7 @@ export default function AdminDashboard() {
           <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
             <TabsTrigger value="summary" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Summary</TabsTrigger>
             <TabsTrigger value="registrations" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Registrations</TabsTrigger>
+            <TabsTrigger value="submissions" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Submissions</TabsTrigger>
             <TabsTrigger value="questions" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Questions</TabsTrigger>
           </TabsList>
           <TabsContent value="summary" className="grid lg:grid-cols-3 gap-6 mt-6">
