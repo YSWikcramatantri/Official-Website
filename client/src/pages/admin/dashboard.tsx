@@ -135,7 +135,6 @@ export default function AdminDashboard() {
       if (!match) throw new Error('Unsupported delete URL');
       const resource = match[1];
       const id = match[2];
-      const id = match[2];
       const postUrl = `/api/admin/${resource}/delete`;
       const res2 = await apiRequest('POST', postUrl, { id });
       console.log('POST delete response', res2.status, await (async () => { try { return await res2.clone().text(); } catch { return ''; } })());
@@ -143,6 +142,7 @@ export default function AdminDashboard() {
       toast({ title: successTitle });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/schools'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
       return;
     } catch (e) {
       const errMsg = (e as Error)?.message ?? 'Delete failed';
