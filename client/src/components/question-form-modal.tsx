@@ -299,13 +299,26 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                 </FormItem>
               )} />
             ) : (
-              <div className="mb-3">
-                <FormLabel>Mode</FormLabel>
-                <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
+              // When modal opened from a tab and not editing, show read-only pills stacked with spacing
+              <div className="space-y-3">
+                {initialData.mode && (
+                  <div>
+                    <FormLabel>Mode</FormLabel>
+                    <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
+                  </div>
+                )}
+
+                {/* show subject pill only when provided and not solo */}
+                {initialData.subject && initialData.mode !== 'solo' && (
+                  <div className="">
+                    <FormLabel>Subject</FormLabel>
+                    <div className="inline-block mt-2 px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.subject}</div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Subject: hide entirely when adding a Solo question (initialData.mode === 'solo' and not editing) */}
+            {/* Subject input when not provided or when editing */}
             { (initialData?.mode === 'solo' && !isEditing) ? null : (
               (!initialData?.subject || isEditing) ? (
                 <FormField control={form.control} name="subject" render={({ field }) => (
@@ -326,12 +339,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                     <FormMessage />
                   </FormItem>
                 )} />
-              ) : (
-                <div className="mt-3">
-                  <FormLabel>Subject</FormLabel>
-                  <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.subject}</div>
-                </div>
-              )
+              ) : null
             )}
 
             <DialogFooter>
