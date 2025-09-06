@@ -299,9 +299,6 @@ export default function AdminDashboard() {
               <>
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">Questions</h3>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => { setEditingQuestion(null); setQuestionModalInitialData(null); setIsQuestionModalOpen(true); }}>Add Question</Button>
-                  </div>
                 </div>
 
                 <div className="mt-4">
