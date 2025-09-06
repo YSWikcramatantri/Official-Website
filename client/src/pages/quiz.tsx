@@ -67,7 +67,17 @@ export default function Quiz() {
         title: "Quiz Completed!",
         description: "Thank you for participating! Your submission has been recorded.",
       });
-      
+
+      // refresh admin dashboard data (if admin is viewing)
+      try {
+        // import queryClient lazily to avoid circular imports at module load
+        const { queryClient } = require('@/lib/queryClient');
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
+      } catch (e) {
+        // ignore in client builds where require might not resolve
+      }
+
       // Clear participant data and redirect after a delay
       setTimeout(() => {
         sessionStorage.removeItem('participant');
