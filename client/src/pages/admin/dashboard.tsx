@@ -300,6 +300,109 @@ export default function AdminDashboard() {
               </TabsContent>
             </Tabs>
           </TabsContent>
+          <TabsContent value="submissions">
+            {submissionsQuery.data === null ? (
+              <Card>
+                <CardHeader><CardTitle>Admin access required</CardTitle></CardHeader>
+                <CardContent>
+                  <p className="mb-4">You must be logged in as an admin to view submissions.</p>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setLocation('/admin/x9k2p8m7q1')}>Go to Admin Login</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Submissions</h3>
+                </div>
+
+                <div className="mt-4">
+                  <Tabs defaultValue="solo">
+                    <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                      <TabsTrigger value="solo" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Solo</TabsTrigger>
+                      <TabsTrigger value="team" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Team</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="solo" className="mt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Participant</TableHead>
+                            <TableHead>Score</TableHead>
+                            <TableHead>Time</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          { (submissions ?? []).filter(s => s.participantMode === 'solo').map(s => (
+                            <TableRow key={s.id}>
+                              <TableCell>{s.participantName}</TableCell>
+                              <TableCell>{s.score}</TableCell>
+                              <TableCell>{s.timeTaken}s</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button size="sm" onClick={() => openSubmissionDetails(s.id)}>View</Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )) }
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+
+                    <TabsContent value="team" className="mt-4">
+                      <div className="space-y-4">
+                        {schools.map(school => {
+                          const schoolSubs = (submissions ?? []).filter(sub => sub.schoolId === school.id);
+                          if (schoolSubs.length === 0) return null;
+                          return (
+                            <Card key={school.id}>
+                              <CardHeader>
+                                <CardTitle className="flex items-center justify-between">
+                                  <span>{school.name} • Team {school.team ?? 'A'}</span>
+                                  <span className="text-sm text-muted-foreground">{schoolSubs.length} submission(s)</span>
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Participant</TableHead>
+                                      <TableHead>Score</TableHead>
+                                      <TableHead>Time</TableHead>
+                                      <TableHead>Actions</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {schoolSubs.map(sub => (
+                                      <TableRow key={sub.id}>
+                                        <TableCell>{sub.participantName}</TableCell>
+                                        <TableCell>{sub.score}</TableCell>
+                                        <TableCell>{sub.timeTaken}s</TableCell>
+                                        <TableCell>
+                                          <div className="flex gap-2">
+                                            <Button size="sm" onClick={() => openSubmissionDetails(sub.id)}>View</Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <SubmissionDetailsModal isOpen={isSubmissionModalOpen} onClose={() => setIsSubmissionModalOpen(false)} submission={selectedSubmissionDetails?.submission} participantName={selectedSubmissionDetails?.participant?.name ?? ''} />
+              </>
+            )}
+          </TabsContent>
+
           <TabsContent value="questions">
             {questionsQuery.data === null ? (
               <Card>
