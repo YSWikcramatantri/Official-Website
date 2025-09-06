@@ -35,10 +35,24 @@ export default function SubmissionDetailsModal({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Safely access submission data; component may render before submission is provided
+  if (!submission) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Submission Details</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 text-center">No submission selected.</div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const getAnswerStatus = (questionId: string, correctAnswer: string) => {
-    const userAnswer = submission.answers[questionId];
+    const userAnswer = submission?.answers ? submission.answers[questionId] : undefined;
     if (!userAnswer) return { status: 'unanswered', color: 'bg-gray-100 text-gray-800' };
-    
+
     const isCorrect = userAnswer === correctAnswer;
     return {
       status: isCorrect ? 'correct' : 'incorrect',
@@ -132,7 +146,7 @@ export default function SubmissionDetailsModal({
                             <span className="font-medium">{optionKey}.</span> {optionValue}
                             {isUserAnswer && (
                               <span className="ml-2 text-xs">
-                                {isCorrectAnswer ? '(Your answer ✓)' : '(Your answer ✗)'}
+                                {isCorrectAnswer ? '(Your answer ✓)' : '(Your answer ���)'}
                               </span>
                             )}
                             {isCorrectAnswer && !isUserAnswer && (
