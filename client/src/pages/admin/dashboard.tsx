@@ -423,7 +423,7 @@ export default function AdminDashboard() {
                   </Tabs>
                 </div>
 
-                <QuestionFormModal isOpen={isQuestionModalOpen} onClose={() => { setIsQuestionModalOpen(false); setEditingQuestion(null); }} question={editingQuestion} />
+                <QuestionFormModal isOpen={isQuestionModalOpen} onClose={() => { setIsQuestionModalOpen(false); setEditingQuestion(null); setQuestionModalInitialData(null); }} question={editingQuestion} initialData={questionModalInitialData} />
               </>
             )}
           </TabsContent>
