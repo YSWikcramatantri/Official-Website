@@ -135,7 +135,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white text-gray-900 dark:bg-gray-800 dark:text-white rounded-lg p-6">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? "Edit Question" : "Add New Question"}
@@ -301,7 +301,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
             ) : (
               <div>
                 <FormLabel>Mode</FormLabel>
-                <div className="p-2 bg-gray-50 rounded text-sm">{initialData.mode}</div>
+                <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.mode}</div>
               </div>
             )}
 
@@ -315,7 +315,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                       <select
                         value={field.value}
                         onChange={(e) => field.onChange(e.target.value)}
-                        className="w-full border rounded px-3 py-2"
+                        className="w-full border rounded px-3 py-2 bg-white text-gray-800 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
                       >
                         <option value="">-- Select subject --</option>
                         {SUBJECTS.map(s => (
@@ -328,9 +328,9 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                 )} />
               ) : (
                 <div>
-                  <FormLabel>Subject</FormLabel>
-                  <div className="p-2 bg-gray-50 rounded text-sm">{initialData.subject}</div>
-                </div>
+                <FormLabel>Subject</FormLabel>
+                <div className="inline-block px-3 py-1 rounded-full bg-gray-100 text-sm font-medium text-gray-800 dark:bg-gray-700 dark:text-gray-100 border border-gray-200 dark:border-gray-600">{initialData.subject}</div>
+              </div>
               )
             )}
 
