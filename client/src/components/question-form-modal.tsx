@@ -305,31 +305,33 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
               </div>
             )}
 
-            {/* Subject: hide if initialData.subject provided and not editing */}
-            {(!initialData?.subject || isEditing) ? (
-              <FormField control={form.control} name="subject" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subject (optional)</FormLabel>
-                  <FormControl>
-                    <select
-                      value={field.value}
-                      onChange={(e) => field.onChange(e.target.value)}
-                      className="w-full border rounded px-3 py-2"
-                    >
-                      <option value="">-- Select subject --</option>
-                      {SUBJECTS.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-            ) : (
-              <div>
-                <FormLabel>Subject</FormLabel>
-                <div className="p-2 bg-gray-50 rounded text-sm">{initialData.subject}</div>
-              </div>
+            {/* Subject: hide entirely when adding a Solo question (initialData.mode === 'solo' and not editing) */}
+            { (initialData?.mode === 'solo' && !isEditing) ? null : (
+              (!initialData?.subject || isEditing) ? (
+                <FormField control={form.control} name="subject" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subject (optional)</FormLabel>
+                    <FormControl>
+                      <select
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full border rounded px-3 py-2"
+                      >
+                        <option value="">-- Select subject --</option>
+                        {SUBJECTS.map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              ) : (
+                <div>
+                  <FormLabel>Subject</FormLabel>
+                  <div className="p-2 bg-gray-50 rounded text-sm">{initialData.subject}</div>
+                </div>
+              )
             )}
 
             <DialogFooter>
