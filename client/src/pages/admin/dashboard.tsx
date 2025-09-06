@@ -131,9 +131,10 @@ export default function AdminDashboard() {
     // fallback: some clients/filters block DELETE; try POST to /delete endpoint
     try {
       // extract resource and id
-      const match = url.match(/\/api\/admin\/(participants|schools)\/(.+)$/);
+      const match = url.match(/\/api\/admin\/(participants|schools|quiz-submissions)\/(.+)$/);
       if (!match) throw new Error('Unsupported delete URL');
       const resource = match[1];
+      const id = match[2];
       const id = match[2];
       const postUrl = `/api/admin/${resource}/delete`;
       const res2 = await apiRequest('POST', postUrl, { id });
