@@ -93,6 +93,9 @@ export default function Home() {
       const pass = p?.passcode ?? '';
       toast({ title: 'Registration Complete', description: pass ? `Your passcode: ${pass}. Keep it safe.` : 'Registration complete.' });
       soloForm.reset();
+      // refresh admin dashboard data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/participants'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
     },
     onError: (error: any) => toast({ title: "Registration Failed", description: error.message, variant: "destructive" }),
   });
