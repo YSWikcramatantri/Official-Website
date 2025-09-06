@@ -311,7 +311,7 @@ export default function AdminDashboard() {
 
                     <TabsContent value="solo" className="mt-4">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="text-sm text-muted-foreground">Showing questions for Solo (mode = solo or both)</div>
+                        <div className="text-sm text-muted-foreground">Showing questions for Solo (mode = solo)</div>
                         <Button size="sm" onClick={() => { setEditingQuestion(null); setQuestionModalInitialData({ mode: 'solo', subject: '' }); setIsQuestionModalOpen(true); }}>Add Solo Question</Button>
                       </div>
                       <Table>
