@@ -250,7 +250,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                         </FormItem>
                       )}
                     />
-                    <span className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium">
+                    <span className="w-8 h-8 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium text-gray-800 dark:text-gray-100 border border-gray-300 dark:border-gray-600">
                       {letter}
                     </span>
                     <FormField
@@ -259,7 +259,7 @@ export default function QuestionFormModal({ isOpen, onClose, question, initialDa
                       render={({ field }) => (
                         <FormItem className="flex-1">
                           <FormControl>
-                            <Input 
+                            <Input
                               placeholder={`Enter option ${letter}`}
                               {...field}
                             />
