@@ -25,9 +25,10 @@ interface QuestionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   question?: Question | null;
+  initialData?: Partial<InsertQuestion> | null;
 }
 
-export default function QuestionFormModal({ isOpen, onClose, question }: QuestionFormModalProps) {
+export default function QuestionFormModal({ isOpen, onClose, question, initialData }: QuestionFormModalProps) {
   const { toast } = useToast();
   const isEditing = !!question;
 
@@ -43,11 +44,12 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
       marks: 5,
       orderIndex: 1,
       mode: 'both',
-      subject: ''
+      subject: '',
+      ...(initialData || {})
     }
   });
 
-  // Reset form when question changes
+  // Reset form when question or initialData changes
   useEffect(() => {
     if (question) {
       form.reset({
@@ -69,10 +71,11 @@ export default function QuestionFormModal({ isOpen, onClose, question }: Questio
         marks: 5,
         orderIndex: 1,
         mode: 'both',
-        subject: ''
+        subject: '',
+        ...(initialData || {})
       });
     }
-  }, [question, form]);
+  }, [question, initialData, form]);
 
 
   const createQuestionMutation = useMutation({
