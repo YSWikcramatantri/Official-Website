@@ -399,11 +399,11 @@ export default function Quiz() {
                     value={key}
                     checked={selectedAnswer === key}
                     onChange={(e) => handleAnswerSelect(e.target.value)}
-                    className="mr-4 text-primary"
+                    className="mr-4 accent-[hsl(var(--primary))] focus:outline-none"
                     data-testid={`input-option-${key}`}
                   />
-                  <span className="font-medium text-gray-700">{key}.</span>
-                  <span className="ml-2">{value}</span>
+                  <span className="font-medium text-[hsl(var(--card-foreground))]">{key}.</span>
+                  <span className="ml-2 text-[hsl(var(--card-foreground))]">{value}</span>
                 </label>
               ))}
             </div>
