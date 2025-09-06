@@ -156,46 +156,81 @@ export default function Home() {
               <Card>
                 <CardHeader><CardTitle>Solo Registration</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                  <Form {...soloForm}>
-                    <form onSubmit={soloForm.handleSubmit(
-                      (data) => soloRegisterMutation.mutate(data),
-                      () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
-                    )} className="space-y-4">
-                      <FormField control={soloForm.control} name="name" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                  {generatedPasscodes.length > 0 && soloParticipant ? (
+                    // Show summary replacing the form
+                    <Card>
+                      <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Solo Registration Complete</CardTitle></CardHeader>
+                      <CardContent>
+                        <p className="mb-3">Here are your registration details — please save your passcode to access the quiz.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <div className="text-sm text-muted-foreground">Name</div>
+                            <div className="font-medium">{soloParticipant.name}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">School / Institution</div>
+                            <div className="font-medium">{soloParticipant.institution ?? '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Email</div>
+                            <div className="font-medium">{soloParticipant.email ?? '—'}</div>
+                          </div>
+                          <div>
+                            <div className="text-sm text-muted-foreground">Phone</div>
+                            <div className="font-medium">{soloParticipant.phone ?? '—'}</div>
+                          </div>
+                        </div>
 
-                      <FormField control={soloForm.control} name="institution" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>School / Institution</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                        <div className="my-4 p-4 border rounded-md flex items-center justify-between">
+                          <div className="font-mono">{generatedPasscodes[0].passcode}</div>
+                          <div>
+                            <Button className="mr-2" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Form {...soloForm}>
+                      <form onSubmit={soloForm.handleSubmit(
+                        (data) => soloRegisterMutation.mutate(data),
+                        () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
+                      )} className="space-y-4">
+                        <FormField control={soloForm.control} name="name" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
 
-                      <FormField control={soloForm.control} name="email" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl><Input type="email" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                        <FormField control={soloForm.control} name="institution" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>School / Institution</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
 
-                      <FormField control={soloForm.control} name="phone" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                        <FormField control={soloForm.control} name="email" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl><Input type="email" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
 
-                      <Button type="submit" className="w-full" disabled={soloRegisterMutation.isPending}>{soloRegisterMutation.isPending ? "Registering..." : "Register & Get Passcode"}</Button>
-                    </form>
-                  </Form>
+                        <FormField control={soloForm.control} name="phone" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+
+                        <Button type="submit" className="w-full" disabled={soloRegisterMutation.isPending}>{soloRegisterMutation.isPending ? "Registering..." : "Register & Get Passcode"}</Button>
+                      </form>
+                    </Form>
+                  )}
 
                 </CardContent>
               </Card>
@@ -206,95 +241,63 @@ export default function Home() {
               <Card>
                 <CardHeader><CardTitle>School Team Registration</CardTitle></CardHeader>
                 <CardContent>
-                  <Form {...schoolForm}>
-                    <form onSubmit={schoolForm.handleSubmit(
-                      (data) => schoolRegisterMutation.mutate(data),
-                      () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
-                    )} className="space-y-6">
-                      <FormField control={schoolForm.control} name="schoolName" render={({ field }) => (<FormItem><FormLabel>School Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                  {generatedPasscodes.length > 0 && !soloParticipant ? (
+                    // Show school summary replacing the form
+                    <Card>
+                      <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Registration Successful!</CardTitle></CardHeader>
+                      <CardContent>
+                        <p>Please save the following passcodes. Each member will need their unique passcode to access the quiz.</p>
+                        {registeredSchool && (
+                          <div className="mb-2 text-sm text-muted-foreground">School: <strong>{registeredSchool.name}</strong> • Team: <strong>{registeredSchool.team}</strong></div>
+                        )}
+                        <div className="my-4 p-4 border rounded-md">
+                          {generatedPasscodes.map(p => <div key={p.passcode} className="font-mono flex justify-between"><span>{p.name} ({p.subject}):</span><span>{p.passcode}</span></div>)}
+                        </div>
+                        <Button onClick={() => copyToClipboard(generatedPasscodes.map(p => `${p.name} (${p.subject}): ${p.passcode}`).join('\n'))}><ClipboardCopy className="mr-2" />Copy All</Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Form {...schoolForm}>
+                      <form onSubmit={schoolForm.handleSubmit(
+                        (data) => schoolRegisterMutation.mutate(data),
+                        () => toast({ title: "Fix the highlighted fields", variant: "destructive" })
+                      )} className="space-y-6">
+                        <FormField control={schoolForm.control} name="schoolName" render={({ field }) => (<FormItem><FormLabel>School Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
 
-                      <div className="mb-2">
-                        <FormLabel>Team</FormLabel>
-                        <RadioGroup defaultValue="A" onValueChange={(v) => schoolForm.setValue('team', v as any)} className="flex gap-6 mt-2">
-                          <div className="flex items-center gap-2"><RadioGroupItem value="A" id="teamA" /><label htmlFor="teamA">Team A</label></div>
-                          <div className="flex items-center gap-2"><RadioGroupItem value="B" id="teamB" /><label htmlFor="teamB">Team B</label></div>
+                        <div className="mb-2">
+                          <FormLabel>Team</FormLabel>
+                          <RadioGroup defaultValue="A" onValueChange={(v) => schoolForm.setValue('team', v as any)} className="flex gap-6 mt-2">
+                            <div className="flex items-center gap-2"><RadioGroupItem value="A" id="teamA" /><label htmlFor="teamA">Team A</label></div>
+                            <div className="flex items-center gap-2"><RadioGroupItem value="B" id="teamB" /><label htmlFor="teamB">Team B</label></div>
+                          </RadioGroup>
+                        </div>
+
+                        <RadioGroup onValueChange={(value) => schoolForm.setValue('members', schoolForm.getValues('members').map((m, i) => ({...m, isLeader: i === parseInt(value)})))}>
+                          {fields.map((field, index) => (
+                            <Card key={field.id} className="p-4">
+                              <FormField control={schoolForm.control} name={`members.${index}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject: {field.value}</FormLabel><FormMessage /></FormItem>)} />
+                              <div className="grid grid-cols-2 gap-4 mt-2">
+                                <FormField control={schoolForm.control} name={`members.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                <FormField control={schoolForm.control} name={`members.${index}.email`} render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                <FormField control={schoolForm.control} name={`members.${index}.phone`} render={({ field }) => (<FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
+                                <FormItem className="flex flex-col justify-center items-center">
+                                  <FormLabel>Team Leader</FormLabel>
+                                  <FormControl><RadioGroupItem value={index.toString()} /></FormControl>
+                                </FormItem>
+                              </div>
+                            </Card>
+                          ))}
                         </RadioGroup>
-                      </div>
 
-                      <RadioGroup onValueChange={(value) => schoolForm.setValue('members', schoolForm.getValues('members').map((m, i) => ({...m, isLeader: i === parseInt(value)})))}>
-                        {fields.map((field, index) => (
-                          <Card key={field.id} className="p-4">
-                            <FormField control={schoolForm.control} name={`members.${index}.subject`} render={({ field }) => (<FormItem><FormLabel>Subject: {field.value}</FormLabel><FormMessage /></FormItem>)} />
-                            <div className="grid grid-cols-2 gap-4 mt-2">
-                              <FormField control={schoolForm.control} name={`members.${index}.name`} render={({ field }) => (<FormItem><FormLabel>Full Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                              <FormField control={schoolForm.control} name={`members.${index}.email`} render={({ field }) => (<FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>)} />
-                              <FormField control={schoolForm.control} name={`members.${index}.phone`} render={({ field }) => (<FormItem><FormLabel>Phone</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>)} />
-                              <FormItem className="flex flex-col justify-center items-center">
-                                <FormLabel>Team Leader</FormLabel>
-                                <FormControl><RadioGroupItem value={index.toString()} /></FormControl>
-                              </FormItem>
-                            </div>
-                          </Card>
-                        ))}
-                      </RadioGroup>
-
-                      <Button type="submit" className="w-full" disabled={schoolRegisterMutation.isPending}>{schoolRegisterMutation.isPending ? "Registering School..." : "Register School & Get Passcodes"}</Button>
-                    </form>
-                  </Form>
+                        <Button type="submit" className="w-full" disabled={schoolRegisterMutation.isPending}>{schoolRegisterMutation.isPending ? "Registering School..." : "Register School & Get Passcodes"}</Button>
+                      </form>
+                    </Form>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
 
-            {/* Passcode Display */}
-            {generatedPasscodes.length > 0 && soloParticipant && (
-              <Card className="mt-6">
-                <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Solo Registration Complete</CardTitle></CardHeader>
-                <CardContent>
-                  <p className="mb-3">Here are your registration details — please save your passcode to access the quiz.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <div className="text-sm text-muted-foreground">Name</div>
-                      <div className="font-medium">{soloParticipant.name}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">School / Institution</div>
-                      <div className="font-medium">{soloParticipant.institution ?? '—'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Email</div>
-                      <div className="font-medium">{soloParticipant.email ?? '—'}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-muted-foreground">Phone</div>
-                      <div className="font-medium">{soloParticipant.phone ?? '—'}</div>
-                    </div>
-                  </div>
-
-                  <div className="my-4 p-4 border rounded-md flex items-center justify-between">
-                    <div className="font-mono">{generatedPasscodes[0].passcode}</div>
-                    <div>
-                      <Button className="mr-2" onClick={() => copyToClipboard(generatedPasscodes[0].passcode)}>Copy</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {generatedPasscodes.length > 0 && !soloParticipant && (
-              <Card className="mt-6">
-                <CardHeader><CardTitle className="flex items-center"><CheckCircle2 className="mr-2 text-green-500" />Registration Successful!</CardTitle></CardHeader>
-                <CardContent>
-                  <p>Please save the following passcodes. Each member will need their unique passcode to access the quiz.</p>
-                  {registeredSchool && (
-                    <div className="mb-2 text-sm text-muted-foreground">School: <strong>{registeredSchool.name}</strong> • Team: <strong>{registeredSchool.team}</strong></div>
-                  )}
-                  <div className="my-4 p-4 border rounded-md">
-                    {generatedPasscodes.map(p => <div key={p.passcode} className="font-mono flex justify-between"><span>{p.name} ({p.subject}):</span><span>{p.passcode}</span></div>)}
-                  </div>
-                  <Button onClick={() => copyToClipboard(generatedPasscodes.map(p => `${p.name} (${p.subject}): ${p.passcode}`).join('\n'))}><ClipboardCopy className="mr-2" />Copy All</Button>
-                </CardContent>
-              </Card>
-            )}
+            {/* Participate Tab */}
 
             {/* Participate Tab */}
             <TabsContent value="participate">
