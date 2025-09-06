@@ -169,12 +169,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get quiz questions (public fetch; client controls access via passcode verification)
   app.get("/api/questions", async (req, res) => {
     try {
-      const mode = (req.query?.mode as string) || null; // 'solo' | 'team' | null
-      const subject = (req.query?.subject as string) || null; // subject for team members
+      const passcode = (req.query?.passcode as string) || null;
+      if (!passcode) return res.status(403).json({ message: "Passcode required" });
+      const participant = await storage.getParticipantByPasscode(passcode);
+      if (!participant) return res.status(404).json({ message: "Invalid passcode" });
+      if (participant.hasCompletedQuiz) return res.status(403).json({ message: "Quiz already completed for this participant" });
+
+      // Use participant's registered mode/subject to filter questions
+      const mode = participant.mode;
+      const subject = participant.subject || null;
+
       let qs = await storage.getAllQuestions();
       if (mode === 'solo') {
         qs = qs.filter(q => (q as any).mode === 'solo');
-      } else if (mode === 'team') {
+      } else if (mode === 'school' || mode === 'team') {
+        // support 'school' legacy value
         qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
       }
       if (subject) {
@@ -182,6 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(qs);
     } catch (error) {
+      console.error('/api/questions failed:', error);
       res.status(500).json({ message: "Failed to fetch questions" });
     }
   });
