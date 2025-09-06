@@ -70,12 +70,10 @@ export default function Quiz() {
 
       // refresh admin dashboard data (if admin is viewing)
       try {
-        // import queryClient lazily to avoid circular imports at module load
-        const { queryClient } = require('@/lib/queryClient');
         queryClient.invalidateQueries({ queryKey: ['/api/admin/quiz-submissions'] });
         queryClient.invalidateQueries({ queryKey: ['/api/admin/stats'] });
       } catch (e) {
-        // ignore in client builds where require might not resolve
+        console.debug('Unable to invalidate admin queries from quiz page', e);
       }
 
       // Clear participant data and redirect after a delay
