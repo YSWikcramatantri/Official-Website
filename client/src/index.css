@@ -73,8 +73,8 @@
   body { @apply antialiased bg-[hsl(var(--background))] text-[hsl(var(--foreground))]; }
 }
 
-.quiz-option { @apply flex items-center p-4 border-2 rounded-lg cursor-pointer transition duration-200 bg-[hsl(var(--card))] hover:border-[hsl(var(--primary))]; }
-.quiz-option.selected { @apply border-[hsl(var(--primary))] bg-[hsl(var(--muted))]; }
+.quiz-option { @apply flex items-center p-4 border-2 rounded-lg cursor-pointer transition duration-200 bg-[hsl(var(--card))] hover:border-[hsl(var(--primary))] min-h-[56px]; }
+.quiz-option.selected { @apply border-[hsl(var(--primary))] bg-[hsl(var(--muted))] shadow-md; }
 .quiz-timer { @apply bg-red-600 rounded-full flex items-center justify-center w-20 h-20 text-white font-bold text-2xl; }
 .quiz-timer.warning { @apply bg-orange-500; }
 .quiz-timer.critical { @apply bg-red-700 animate-pulse; }
