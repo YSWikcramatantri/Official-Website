@@ -281,7 +281,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       console.error('/api/admin/questions POST failed:', err);
       if (err instanceof z.ZodError) return res.status(400).json({ message: 'Invalid question payload', details: err.errors });
-      res.status(500).json({ message: (err as any)?.message || 'Failed to create question' });
+      const message = (err as any)?.message || 'Failed to create question';
+      // Expose stack when not in production for easier debugging
+      if (process.env.NODE_ENV !== 'production') {
+        return res.status(500).json({ message, stack: (err as any)?.stack });
+      }
+      res.status(500).json({ message });
     }
   });
 
