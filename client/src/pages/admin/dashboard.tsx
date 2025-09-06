@@ -304,46 +304,122 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="mt-4">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order</TableHead>
-                        <TableHead>Text</TableHead>
-                        <TableHead>Mode</TableHead>
-                        <TableHead>Time (s)</TableHead>
-                        <TableHead>Marks</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {questions.map(q => (
-                        <TableRow key={q.id}>
-                          <TableCell>{q.orderIndex}</TableCell>
-                          <TableCell className="max-w-xl truncate">{q.text}</TableCell>
-                          <TableCell>{(q as any).mode ?? 'both'}</TableCell>
-                          <TableCell>{q.timeLimit}</TableCell>
-                          <TableCell>{q.marks}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-2 items-center">
-                              <Button size="sm" onClick={() => { setEditingQuestion(q); setIsQuestionModalOpen(true); }}>Edit</Button>
-                              <Button variant="destructive" size="sm" onClick={async () => {
-                                if (!confirm('Delete this question?')) return;
-                                try {
-                                  await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
-                                  queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
-                                  toast({ title: 'Question deleted' });
-                                } catch (e: any) {
-                                  toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
-                                }
-                              }}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                  {/* Sub-tabs: Solo and Team */}
+                  <Tabs defaultValue="solo">
+                    <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                      <TabsTrigger value="solo" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Solo</TabsTrigger>
+                      <TabsTrigger value="team" className="rounded-lg px-4 py-2 data-[state=active]:bg-[hsl(var(--card))]">Team</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="solo" className="mt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm text-muted-foreground">Showing questions for Solo (mode = solo or both)</div>
+                        <Button size="sm" onClick={() => { setEditingQuestion(null); setIsQuestionModalOpen(true); }}>Add Solo Question</Button>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Order</TableHead>
+                            <TableHead>Text</TableHead>
+                            <TableHead>Mode</TableHead>
+                            <TableHead>Time (s)</TableHead>
+                            <TableHead>Marks</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {questions.filter(q => ((q as any).mode === 'solo' || (q as any).mode === 'both')).map(q => (
+                            <TableRow key={q.id}>
+                              <TableCell>{q.orderIndex}</TableCell>
+                              <TableCell className="max-w-xl truncate">{q.text}</TableCell>
+                              <TableCell>{(q as any).mode ?? 'both'}</TableCell>
+                              <TableCell>{q.timeLimit}</TableCell>
+                              <TableCell>{q.marks}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-2 items-center">
+                                  <Button size="sm" onClick={() => { setEditingQuestion(q); setIsQuestionModalOpen(true); }}>Edit</Button>
+                                  <Button variant="destructive" size="sm" onClick={async () => {
+                                    if (!confirm('Delete this question?')) return;
+                                    try {
+                                      await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
+                                      queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+                                      toast({ title: 'Question deleted' });
+                                    } catch (e: any) {
+                                      toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
+                                    }
+                                  }}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+
+                    <TabsContent value="team" className="mt-4">
+                      {/* Team subjects nested tabs */}
+                      <Tabs defaultValue="Astrophysics">
+                        <TabsList className="bg-[hsl(var(--muted))] rounded-xl p-1">
+                          { ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"].map(s => (
+                            <TabsTrigger key={s} value={s} className="rounded-lg px-3 py-2 text-sm data-[state=active]:bg-[hsl(var(--card))]">{s}</TabsTrigger>
+                          )) }
+                        </TabsList>
+
+                        { ["Astrophysics", "Observational Astronomy", "Rocketry", "Cosmology", "General Astronomy"].map(s => (
+                          <TabsContent key={s} value={s} className="mt-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="text-sm text-muted-foreground">Showing questions for subject: {s}</div>
+                              <Button size="sm" onClick={() => { setEditingQuestion(null); setIsQuestionModalOpen(true); }}>Add Question for {s}</Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Order</TableHead>
+                                  <TableHead>Text</TableHead>
+                                  <TableHead>Mode</TableHead>
+                                  <TableHead>Time (s)</TableHead>
+                                  <TableHead>Marks</TableHead>
+                                  <TableHead>Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {questions.filter(q => (((q as any).mode === 'team' || (q as any).mode === 'both') && (q as any).subject === s)).map(q => (
+                                  <TableRow key={q.id}>
+                                    <TableCell>{q.orderIndex}</TableCell>
+                                    <TableCell className="max-w-xl truncate">{q.text}</TableCell>
+                                    <TableCell>{(q as any).mode ?? 'both'}</TableCell>
+                                    <TableCell>{q.timeLimit}</TableCell>
+                                    <TableCell>{q.marks}</TableCell>
+                                    <TableCell>
+                                      <div className="flex gap-2 items-center">
+                                        <Button size="sm" onClick={() => { setEditingQuestion(q); setIsQuestionModalOpen(true); }}>Edit</Button>
+                                        <Button variant="destructive" size="sm" onClick={async () => {
+                                          if (!confirm('Delete this question?')) return;
+                                          try {
+                                            await apiRequest('DELETE', `/api/admin/questions/${q.id}`);
+                                            queryClient.invalidateQueries({ queryKey: ['/api/admin/questions'] });
+                                            toast({ title: 'Question deleted' });
+                                          } catch (e: any) {
+                                            toast({ title: 'Delete failed', description: e.message, variant: 'destructive' });
+                                          }
+                                        }}>
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TabsContent>
+                        ))}
+                      </Tabs>
+                    </TabsContent>
+
+                  </Tabs>
                 </div>
 
                 <QuestionFormModal isOpen={isQuestionModalOpen} onClose={() => { setIsQuestionModalOpen(false); setEditingQuestion(null); }} question={editingQuestion} />
