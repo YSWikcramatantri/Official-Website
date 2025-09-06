@@ -40,9 +40,11 @@ export default function Quiz() {
     queryFn: async () => {
       const mode = participant.mode;
       const subject = (participant.subject as string) || '';
+      const passcode = (participant.passcode as string) || '';
       const params = [] as string[];
       if (mode) params.push(`mode=${encodeURIComponent(mode)}`);
       if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+      if (passcode) params.push(`passcode=${encodeURIComponent(passcode)}`);
       const query = params.length ? `?${params.join('&')}` : '';
       const res = await apiRequest('GET', `/api/questions${query}`);
       return res.json();
