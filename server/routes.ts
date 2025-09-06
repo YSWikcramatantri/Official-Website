@@ -189,6 +189,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (subject) {
         qs = qs.filter(q => (q as any).subject === subject);
       }
+
+      // Debug logging to help trace unexpected question exposure
+      try {
+        console.log(`/api/questions: passcode=${passcode} participantMode=${participant.mode} subject=${participant.subject} matched=${qs.map(q => q.id).join(',')}`);
+      } catch (e) {
+        console.log('/api/questions debug log failed', e);
+      }
+
       res.json(qs);
     } catch (error) {
       console.error('/api/questions failed:', error);
