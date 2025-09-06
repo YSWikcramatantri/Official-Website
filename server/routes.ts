@@ -555,6 +555,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a quiz submission (admin)
+  app.delete('/api/admin/quiz-submissions/:id', async (req, res) => {
+    try {
+      const id = req.params?.id || req.body?.id || req.query?.id;
+      console.log('DELETE quiz submission request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: 'Submission not found' });
+    } catch (error) {
+      console.error('Failed to delete submission:', error);
+      res.status(500).json({ message: 'Failed to delete submission' });
+    }
+  });
+
+  app.delete('/api/admin/quiz-submissions', async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log('DELETE quiz submission (alt) request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: 'Submission not found' });
+    } catch (error) {
+      console.error('Failed to delete submission (alt):', error);
+      res.status(500).json({ message: 'Failed to delete submission' });
+    }
+  });
+
+  app.post('/api/admin/quiz-submissions/delete', async (req, res) => {
+    try {
+      const id = req.body?.id || req.query?.id;
+      console.log('POST delete submission request for id:', id);
+      if (!id) return res.status(400).json({ message: 'Missing submission id' });
+      const deleted = await storage.deleteQuizSubmission(id);
+      if (deleted) return res.json({ success: true });
+      return res.status(404).json({ message: 'Submission not found' });
+    } catch (error) {
+      console.error('Failed to delete submission via POST:', error);
+      res.status(500).json({ message: 'Failed to delete submission' });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+
   const httpServer = createServer(app);
   return httpServer;
 }
