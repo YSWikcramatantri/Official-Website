@@ -181,7 +181,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let qs = await storage.getAllQuestions();
       if (mode === 'solo') {
-        qs = qs.filter(q => (q as any).mode === 'solo');
+        // Only questions explicitly marked for solo and without a subject should be used for solo participants
+        qs = qs.filter(q => (q as any).mode === 'solo' && !(q as any).subject);
       } else if (mode === 'school' || mode === 'team') {
         // support 'school' legacy value
         qs = qs.filter(q => (q as any).mode === 'team' || (q as any).mode === 'both');
