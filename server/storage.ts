@@ -1,27 +1,32 @@
-import { 
+import {
   participants,
   schools,
   questions,
   quizSubmissions,
   systemSettings,
-  type Participant, 
-  type School,
-  type Question, 
-  type QuizSubmission, 
+  type Participant,
+  type Question,
+  type QuizSubmission,
   type SystemSettings,
-  type InsertParticipant, 
-  type InsertSchool,
-  type InsertQuestion, 
+  type InsertParticipant,
+  type InsertQuestion,
   type InsertQuizSubmission,
   type UpdateSystemSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
-type MemberInfo = InsertParticipant & {
+type MemberInfo = {
+  name: string;
+  email?: string | null;
+  phone?: string | null;
   subject: string;
-  isLeader: boolean;
+  isLeader?: boolean;
 };
+
+// Local School types (shared/schema does not export a School/InsertSchool type)
+type School = typeof schools.$inferSelect;
+type InsertSchool = { name: string; team?: string };
 
 export interface IStorage {
   // Participants
@@ -113,7 +118,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteParticipant(id: string): Promise<boolean> {
     const result = await db.delete(participants).where(eq(participants.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Schools
@@ -138,7 +143,7 @@ export class DatabaseStorage implements IStorage {
       const r = await tx.delete(schools).where(eq(schools.id, id));
       return r;
     });
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async registerSchoolWithMembers(schoolName: string, members: MemberInfo[], team = "A"): Promise<{ school: School, newParticipants: Participant[] }> {
@@ -191,7 +196,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuestion(id: string): Promise<boolean> {
     const result = await db.delete(questions).where(eq(questions.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Quiz Submissions
@@ -211,7 +216,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuizSubmission(id: string): Promise<boolean> {
     const result = await db.delete(quizSubmissions).where(eq(quizSubmissions.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // System Settings
