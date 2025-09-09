@@ -4,6 +4,9 @@
     { "src": "api/**/*.ts", "use": "@vercel/node@3.0.19" },
     { "src": "package.json", "use": "@vercel/static-build@2.0.0", "config": { "distDir": "dist/public" } }
   ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" }
+  ],
   "rewrites": [
     { "source": "/((?!api|.*\\..*).*)", "destination": "/index.html" }
   ]
